@@ -27,6 +27,16 @@ private:
 	// Should we use vsync to limit the frame rate?
 	bool vsync;
 
+	// Shaders and shader-related constructs
+	Microsoft::WRL::ComPtr<ID3D11PixelShader> pixelShader;
+	Microsoft::WRL::ComPtr<ID3D11VertexShader> vertexShader;
+	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout;
+	Microsoft::WRL::ComPtr<ID3D11Buffer> constantBufferVS;
+
+	std::shared_ptr<Mesh> triangle;
+	std::shared_ptr<Mesh> star;
+	std::shared_ptr<Mesh> square;
+
 	// Initialization helper methods - feel free to customize, combine, etc.
 	void LoadShaders(); 
 	void CreateBasicGeometry();
@@ -36,13 +46,6 @@ private:
 	//    Component Object Model, which DirectX objects do
 	//  - More info here: https://github.com/Microsoft/DirectXTK/wiki/ComPtr
 	
-	// Shaders and shader-related constructs
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> pixelShader;
-	Microsoft::WRL::ComPtr<ID3D11VertexShader> vertexShader;
-	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout;
 
-	std::shared_ptr<Mesh> triangle;
-	std::shared_ptr<Mesh> star;
-	std::shared_ptr<Mesh> square;
 };
 
