@@ -4,8 +4,10 @@
 #include <DirectXMath.h>
 #include <wrl/client.h> // Used for ComPtr - a smart pointer for COM objects
 #include <memory>
+#include <vector>
 
 #include "Mesh.h"
+#include "MeshEntity.h"
 
 class Game 
 	: public DXCore
@@ -36,6 +38,9 @@ private:
 	std::shared_ptr<Mesh> triangle;
 	std::shared_ptr<Mesh> star;
 	std::shared_ptr<Mesh> square;
+
+	std::vector<std::shared_ptr<MeshEntity>> meshEntities;
+	
 
 	// Initialization helper methods - feel free to customize, combine, etc.
 	void LoadShaders(); 

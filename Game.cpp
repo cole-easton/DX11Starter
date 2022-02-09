@@ -153,11 +153,11 @@ void Game::LoadShaders()
 void Game::CreateBasicGeometry()
 {
 	Vertex triVertices[] = {
-		{XMFLOAT3(-0.8f, 0.2f, 0), XMFLOAT4(1, 0.5f, 0, 1)},
-		{XMFLOAT3(-0.7f, 0.3732f, 0), XMFLOAT4(1, 0.5f, 0, 1)},
-		{XMFLOAT3(-0.6f, 0.2f, 0), XMFLOAT4(1, 0.5f, 0, 1)}
+		{XMFLOAT3(-0.15f, -0.15f, 0), XMFLOAT4(1, 0.5f, 0, 1)},
+		{XMFLOAT3(0.15f, -0.15f, 0), XMFLOAT4(1, 0.5f, 0, 1)},
+		{XMFLOAT3(0, 0.15f, 0), XMFLOAT4(1, 0.5f, 0, 1)}
 	};
-	unsigned int triIndices[] = { 0, 1, 2 };
+	unsigned int triIndices[] = { 0, 2, 1 };
 	triangle = std::make_shared<Mesh>(triVertices, 3, triIndices, 3, device, context);
 
 	Vertex starVertices[] = {
@@ -176,15 +176,28 @@ void Game::CreateBasicGeometry()
 	star = std::make_shared<Mesh>(starVertices, 10, starIndices, 24, device, context);
 
 	Vertex squareVertices[] = {
-		{XMFLOAT3(0.5f, 0.3f, 0), XMFLOAT4(0.5f, 0, 1, 1)},
-		{XMFLOAT3(0.8f, 0.3f, 0), XMFLOAT4(0.5f, 0, 1, 1)},
-		{XMFLOAT3(0.8f, 0, 0), XMFLOAT4(0.5f, 0, 1, 1)},
-		{XMFLOAT3(0.5f, 0, 0), XMFLOAT4(0.5f, 0, 1, 1)},
+		{XMFLOAT3(-0.15f, -0.15f, 0), XMFLOAT4(0.5f, 0, 1, 1)},
+		{XMFLOAT3(-0.15f, 0.15f, 0), XMFLOAT4(0.5f, 0, 1, 1)},
+		{XMFLOAT3(0.15f, -0.15f, 0), XMFLOAT4(0.5f, 0, 1, 1)},
+		{XMFLOAT3(0.15f, 0.15f, 0), XMFLOAT4(0.5f, 0, 1, 1)},
 	};
-	unsigned int squareIndices[] = {0,1,2, 0,2,3};
+	unsigned int squareIndices[] = {0,1,2, 1,3,2};
 	square = std::make_shared<Mesh>(squareVertices, 4, squareIndices, 6, device, context);
 
+	meshEntities.push_back(std::make_shared<MeshEntity>(star.get()));
+	meshEntities.at(0)->GetTransform()->SetPosition(0.5, 0, 0);
 
+	meshEntities.push_back(std::make_shared<MeshEntity>(star.get()));
+	meshEntities.at(1)->GetTransform()->SetPosition(-0.5, 0, 0);
+
+	meshEntities.push_back(std::make_shared<MeshEntity>(square.get()));
+	meshEntities.at(2)->GetTransform()->SetPosition(0, 0.5, 0);
+
+	meshEntities.push_back(std::make_shared<MeshEntity>(square.get()));
+	meshEntities.at(3)->GetTransform()->SetPosition(0, -0.5, 0);
+
+	meshEntities.push_back(std::make_shared<MeshEntity>(triangle.get()));
+	meshEntities.at(4)->GetTransform()->SetPosition(0, 0, 0);	
 
 }
 
@@ -244,18 +257,13 @@ void Game::Draw(float deltaTime, float totalTime)
 	context->IASetInputLayout(inputLayout.Get());
 
 
-	VertexShaderExternalData vsData;
-	vsData.colorTint = XMFLOAT4(1, 0.5f, 0.5f, 1);
-	vsData.offset = XMFLOAT3(0, -0.3f, 0);
-	D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
-	context->Map(constantBufferVS.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
-	memcpy(mappedBuffer.pData, &vsData, sizeof(vsData));
-	context->Unmap(constantBufferVS.Get(), 0);
-	context->VSSetConstantBuffers(0, 1, constantBufferVS.GetAddressOf());
-	
-	triangle->Draw();
-	star->Draw();
-	square->Draw();
+	for (int i = 0; i < meshEntities.size(); ++i) {
+		float scale = (float)(0.5 + pow(sin(totalTime*4 + 3.14159f*i/4), 8));
+		meshEntities.at(i)->GetTransform()->SetScale(scale, scale, scale);
+		meshEntities.at(i)->GetTransform()->Translate(-0.2 * deltaTime, 0, 0);
+		meshEntities.at(i)->GetTransform()->Turn(0, 0, 2 * deltaTime);
+		meshEntities.at(i) -> Draw(constantBufferVS, context);
+	}
 
 	// Present the back buffer to the user
 	//  - Puts the final frame we're drawing into the window so the user can see it
