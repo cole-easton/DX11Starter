@@ -7,7 +7,7 @@ using namespace DirectX;
 
 Camera::Camera(float x, float y, float z, float aspectRatio) : Camera(Transform(x, y, z, 0, 0, 0, 1, 1, 1), aspectRatio) {}
 
-Camera::Camera(Transform transform, float aspectRatio) : Camera(transform, aspectRatio, 1, 0.01, 1000, 0.01, 1) {}
+Camera::Camera(Transform transform, float aspectRatio) : Camera(transform, aspectRatio, 1, 0.01, 1000, 0.5, 1) {}
 
 Camera::Camera(Transform transform, float aspectRatio, float frustumRadians, float nearPlane, float farPlane, float movementSpeed, float mouseLookSpeed)
 {
@@ -48,7 +48,6 @@ void Camera::UpdateViewMatrix()
 
 void Camera::Update(float dt)
 {
-	std::cout << transform.GetPosition().x << ", " << transform.GetPosition().y << ", " << transform.GetPosition().z << std::endl;
 	Input& input = Input::GetInstance();
 	//I am intentionally not using else-ifs -- I want forward and backward to cancel and to be able to move diagonally
 	if (input.KeyDown('W') || input.KeyDown(VK_UP)) {

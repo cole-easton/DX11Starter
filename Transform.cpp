@@ -103,7 +103,7 @@ void Transform::Move(float x, float y, float z)
 	XMVECTOR displacement = XMVectorSet(x, y, z, 0);
 	XMVECTOR rot = XMQuaternionRotationRollPitchYaw(rotation.x, rotation.y, rotation.z);
 	displacement = XMVector3Rotate(displacement, rot);
-	XMStoreFloat3(&position, displacement);
+	XMStoreFloat3(&position, XMLoadFloat3(&position)+displacement);
 	dirty = true;
 }
 
