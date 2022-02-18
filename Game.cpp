@@ -59,6 +59,7 @@ void Game::Init()
 	//  - You'll be expanding and/or replacing these later
 	LoadShaders();
 	CreateBasicGeometry();
+	camera = std::make_shared<Camera>(Transform(0, 0, -5, 0, 0, 0, 1, 1, 1), (float)this->width / this->height);
 	
 	// Tell the input assembler stage of the pipeline what kind of
 	// geometric primitives (points, lines or triangles) we want to draw.  
@@ -210,6 +211,7 @@ void Game::OnResize()
 {
 	// Handle base-level DX resize stuff
 	DXCore::OnResize();
+	if(camera) camera->UpdateProjectionMatrix((float)this->width / this->height);
 }
 
 // --------------------------------------------------------
@@ -217,6 +219,13 @@ void Game::OnResize()
 // --------------------------------------------------------
 void Game::Update(float deltaTime, float totalTime)
 {
+	for (int i = 0; i < meshEntities.size(); ++i) {
+		float scale = (float)(0.5 + pow(sin(totalTime * 4 + 3.14159f * i / 4), 8));
+		meshEntities.at(i)->GetTransform()->SetScale(scale, scale, scale);
+		meshEntities.at(i)->GetTransform()->Translate(-0.2 * deltaTime, 0, 0);
+		meshEntities.at(i)->GetTransform()->Turn(0, 0, 2 * deltaTime);
+	}
+	camera->Update(deltaTime);
 	// Example input checking: Quit if the escape key is pressed
 	if (Input::GetInstance().KeyDown(VK_ESCAPE))
 		Quit();
@@ -258,11 +267,7 @@ void Game::Draw(float deltaTime, float totalTime)
 
 
 	for (int i = 0; i < meshEntities.size(); ++i) {
-		float scale = (float)(0.5 + pow(sin(totalTime*4 + 3.14159f*i/4), 8));
-		meshEntities.at(i)->GetTransform()->SetScale(scale, scale, scale);
-		meshEntities.at(i)->GetTransform()->Translate(-0.2 * deltaTime, 0, 0);
-		meshEntities.at(i)->GetTransform()->Turn(0, 0, 2 * deltaTime);
-		meshEntities.at(i) -> Draw(constantBufferVS, context);
+		meshEntities.at(i) -> Draw(camera, constantBufferVS, context);
 	}
 
 	// Present the back buffer to the user

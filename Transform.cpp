@@ -42,17 +42,41 @@ DirectX::XMFLOAT3 Transform::GetPosition()
 	return position;
 }
 
-DirectX::XMFLOAT3 Transform::GetRotation()
+XMFLOAT3 Transform::GetRotation()
 {
 	return rotation;
 }
 
-DirectX::XMFLOAT3 Transform::GetScale()
+XMFLOAT3 Transform::GetScale()
 {
 	return scale;
 }
 
-DirectX::XMFLOAT4X4 Transform::GetWorldMatrix()
+XMFLOAT3 Transform::GetForward()
+{
+	XMVECTOR rot = XMQuaternionRotationRollPitchYaw(rotation.x, rotation.y, rotation.z);
+	XMFLOAT3 forward;
+	XMStoreFloat3(&forward, XMVector3Rotate(XMVectorSet(0, 0, 1, 0), rot));
+	return forward;
+}
+
+XMFLOAT3 Transform::GetRight()
+{
+	XMVECTOR rot = XMQuaternionRotationRollPitchYaw(rotation.x, rotation.y, rotation.z);
+	XMFLOAT3 right;
+	XMStoreFloat3(&right, XMVector3Rotate(XMVectorSet(1, 0, 0, 0), rot));
+	return right;
+}
+
+XMFLOAT3 Transform::GetUp()
+{
+	XMVECTOR rot = XMQuaternionRotationRollPitchYaw(rotation.x, rotation.y, rotation.z);
+	XMFLOAT3 up;
+	XMStoreFloat3(&up, XMVector3Rotate(XMVectorSet(0, 1, 0, 0), rot));
+	return up;
+}
+
+XMFLOAT4X4 Transform::GetWorldMatrix()
 {
 	if (dirty) {
 		XMMATRIX trans = XMMatrixTranslation(position.x, position.y, position.z);
@@ -63,7 +87,7 @@ DirectX::XMFLOAT4X4 Transform::GetWorldMatrix()
 	return world;
 }
 
-DirectX::XMFLOAT4X4 Transform::GetWorldInverseTransposeMatrix()
+XMFLOAT4X4 Transform::GetWorldInverseTransposeMatrix()
 {
 	return DirectX::XMFLOAT4X4();
 }
@@ -71,15 +95,28 @@ DirectX::XMFLOAT4X4 Transform::GetWorldInverseTransposeMatrix()
 void Transform::Translate(float x, float y, float z)
 {
 	XMStoreFloat3(&position, XMLoadFloat3(&position) + XMVectorSet(x, y, z, 0));
+	dirty = true;
+}
+
+void Transform::Move(float x, float y, float z)
+{
+	XMVECTOR displacement = XMVectorSet(x, y, z, 0);
+	XMVECTOR rot = XMQuaternionRotationRollPitchYaw(rotation.x, rotation.y, rotation.z);
+	displacement = XMVector3Rotate(displacement, rot);
+	XMStoreFloat3(&position, displacement);
+	dirty = true;
 }
 
 void Transform::Turn(float pitch, float yaw, float roll)
 {
 	XMStoreFloat3(&rotation, XMLoadFloat3(&rotation) + XMVectorSet(pitch, yaw, roll, 0));
+	dirty = true;
 }
 
 void Transform::Scale(float x, float y, float z)
 {
 	XMStoreFloat3(&scale, XMLoadFloat3(&scale) + XMVectorSet(x, y, z, 0));
+	dirty = true;
 
 }
+

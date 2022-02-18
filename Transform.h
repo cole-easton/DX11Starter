@@ -20,9 +20,13 @@ public:
 	DirectX::XMFLOAT3 GetPosition();
 	DirectX::XMFLOAT3 GetRotation(); 
 	DirectX::XMFLOAT3 GetScale();
+	DirectX::XMFLOAT3 GetForward();
+	DirectX::XMFLOAT3 GetRight();
+	DirectX::XMFLOAT3 GetUp(); //in case the transform falls asleep /s
 	DirectX::XMFLOAT4X4 GetWorldMatrix();
 	DirectX::XMFLOAT4X4 GetWorldInverseTransposeMatrix();
 	void Translate(float x, float y, float z);
+	void Move(float x, float y, float z); //I used an engine for years that used this translate/move distinction to mean absolute/relative
 	void Turn(float pitch, float yaw, float roll);
 	void Scale(float x, float y, float z);
 };
