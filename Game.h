@@ -6,6 +6,7 @@
 #include <memory>
 #include <vector>
 
+#include "SimpleShader.h"
 #include "Mesh.h"
 #include "MeshEntity.h"
 #include "Camera.h"
@@ -31,18 +32,25 @@ private:
 	bool vsync;
 
 	// Shaders and shader-related constructs
-	Microsoft::WRL::ComPtr<ID3D11PixelShader> pixelShader;
-	Microsoft::WRL::ComPtr<ID3D11VertexShader> vertexShader;
-	Microsoft::WRL::ComPtr<ID3D11InputLayout> inputLayout;
-	Microsoft::WRL::ComPtr<ID3D11Buffer> constantBufferVS;
-
-	std::shared_ptr<Mesh> triangle;
-	std::shared_ptr<Mesh> star;
-	std::shared_ptr<Mesh> square;
+	std::shared_ptr<SimplePixelShader> pixelShader;
+	std::shared_ptr<SimplePixelShader> funkyPixelShader;
+	std::shared_ptr<SimpleVertexShader> vertexShader;
 
 	std::shared_ptr<Camera> camera;
 
+	Mesh* sphereMesh;
+	Mesh* cubeMesh;
+	Mesh* helixMesh;
+
+	std::shared_ptr<MeshEntity> sphere1;
+	std::shared_ptr<MeshEntity> sphere2;
+	std::shared_ptr<MeshEntity> cube;
+	std::shared_ptr<MeshEntity> helix;
+
 	std::vector<std::shared_ptr<MeshEntity>> meshEntities;
+
+	Material* basicCyanMaterial;
+	Material* funkyMaterial;
 	
 
 	// Initialization helper methods - feel free to customize, combine, etc.

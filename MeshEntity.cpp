@@ -1,12 +1,12 @@
 #include <DirectXMath.h>
 #include "MeshEntity.h"
-#include "BufferStructs.h"
 
 using namespace DirectX;
 
-MeshEntity::MeshEntity(Mesh* mesh)
+MeshEntity::MeshEntity(Mesh* mesh, Material * material)
 {
 	pMesh = mesh;
+	pMaterial = material;
 	transform = Transform();
 }
 
@@ -20,17 +20,29 @@ Transform* const MeshEntity::GetTransform()
 	return &transform;
 }
 
-void MeshEntity::Draw(std::shared_ptr<Camera> camera, Microsoft::WRL::ComPtr<ID3D11Buffer> constantBufferVS, Microsoft::WRL::ComPtr<ID3D11DeviceContext> context)
+Material* MeshEntity::GetMaterial()
 {
-	VertexShaderExternalData vsData;
-	vsData.colorTint = XMFLOAT4(1, 0.5f, 0.5f, 1);
-	vsData.worldMatrix = transform.GetWorldMatrix();
-	vsData.viewMatrix = camera->GetViewMatrix();
-	vsData.projectionMatrix = camera->GetProjectionMatrix();
-	D3D11_MAPPED_SUBRESOURCE mappedBuffer = {};
-	context->Map(constantBufferVS.Get(), 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer);
-	memcpy(mappedBuffer.pData, &vsData, sizeof(vsData));
-	context->Unmap(constantBufferVS.Get(), 0);
-	context->VSSetConstantBuffers(0, 1, constantBufferVS.GetAddressOf());
+	return pMaterial;
+}
+
+void MeshEntity::SetMaterial(Material* material)
+{
+	pMaterial = material;
+}
+
+void MeshEntity::Draw(std::shared_ptr<Camera> camera, Microsoft::WRL::ComPtr<ID3D11DeviceContext> context)
+{
+	std::shared_ptr<SimpleVertexShader> vs = pMaterial->GetVertexShader(); 
+	vs->SetMatrix4x4("world", transform.GetWorldMatrix());   
+	vs->SetMatrix4x4("view", camera->GetViewMatrix());            
+	vs->SetMatrix4x4("projection", camera->GetProjectionMatrix()); 
+	vs->CopyAllBufferData();
+
+	std::shared_ptr<SimplePixelShader> ps = pMaterial->GetPixelShader();
+	ps->SetFloat4("colorTint", pMaterial->GetColorTint());
+	ps->CopyAllBufferData();
+
+	pMaterial->GetVertexShader()->SetShader();
+	pMaterial->GetPixelShader()->SetShader();
 	pMesh->Draw();
 }
