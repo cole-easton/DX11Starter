@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DXCore.h"
+#include "Lights.h"
 
 #include <wrl/client.h> // Used for ComPtr - a smart pointer for COM objects
 #include <memory>
@@ -55,11 +56,14 @@ private:
 	Material* basicLightedMaterial;
 	Material* experimentalLightingMaterial;
 
+	std::vector<Light> lights;
+
 	DirectX::XMFLOAT3 ambientColor;
 
 	// Initialization helper methods - feel free to customize, combine, etc.
 	void LoadShaders(); 
 	void CreateBasicGeometry();
+	void SetLights();
 
 	// Note the usage of ComPtr below
 	//  - This is a smart pointer for objects that abide by the

@@ -1,12 +1,12 @@
 #include "StructIncludes.hlsli"
+#include "LightingIncludes.hlsli"
 
 cbuffer externalData : register(b0) {
 	float4 colorTint;
 	float3 cameraPosition;
 	float roughness;
 	float3 ambientColor;
-	Light directionalLight1;
-	Light directionalLight2;
+	Light lights[5];
 }
 
 // --------------------------------------------------------
@@ -20,7 +20,20 @@ cbuffer externalData : register(b0) {
 // --------------------------------------------------------
 float4 main(VertexToPixel input) : SV_TARGET
 {
-	//return colorTint * float4(ambientColor, 1);
 	input.normal = normalize(input.normal);
-	return float4(directionalLight1.color, 1);
+	LightingInfo info;
+	info.normal = input.normal;
+	info.roughness = roughness;
+	info.worldPosition = input.worldPosition;
+	info.cameraPosition = cameraPosition;
+	info.surfaceColor = colorTint;
+	info.ambientColor = ambientColor;
+
+	float3 pixelColor = float3(0, 0, 0);
+	for (int i = 0; i < 5; i++) {
+		pixelColor += calculateTotalLighting(lights[i], info);
+
+	}
+	return float4(pixelColor, 1);
+
 }

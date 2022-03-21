@@ -52,4 +52,14 @@ struct Light {
 	float3 padding			: PADDING;
 };
 
+struct LightingInfo {
+	float3 normal			: NORMAL;
+	float roughness			: ROUGHNESS;
+	float3 worldPosition	: POSITION;
+	float surfaceColor		: COLOR;
+	float3 cameraPosition	: POSITION;
+	float padding			: PADDING;
+	float3 ambientColor		: COLOR;
+};
+
 #endif

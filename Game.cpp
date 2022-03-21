@@ -61,6 +61,7 @@ void Game::Init()
 	//  - You'll be expanding and/or replacing these later
 	LoadShaders();
 	CreateBasicGeometry();
+	SetLights();
 	camera = std::make_shared<Camera>(Transform(0, 0, -10, 0, 0, 0, 1, 1, 1), (float)this->width / this->height);
 	ambientColor = XMFLOAT3(0.15, 0.15, 0.25);
 	
@@ -86,7 +87,45 @@ void Game::LoadShaders()
 	basicLightingShader = std::make_shared<SimplePixelShader>(device, context, GetFullPathTo_Wide(L"BasicLightingPixelSHader.cso").c_str());
 }
 
+void Game::SetLights() {
+	Light directionalLight1 = {};
+	directionalLight1.type = LIGHT_TYPE_DIRECTIONAL;
+	directionalLight1.color = XMFLOAT3(1, 1, 1);
+	directionalLight1.direction = XMFLOAT3(1, 0, 0);
+	directionalLight1.intensity = 0.6;
 
+	Light directionalLight2 = {};
+	directionalLight2.type = LIGHT_TYPE_DIRECTIONAL;
+	directionalLight2.color = XMFLOAT3(1, 1, 0);
+	directionalLight2.direction = XMFLOAT3(-1, -1, 0);
+	directionalLight2.intensity = 0.6;
+
+	Light directionalLight3 = {};
+	directionalLight3.type = LIGHT_TYPE_DIRECTIONAL;
+	directionalLight3.color = XMFLOAT3(0, 0, 1);
+	directionalLight3.direction = XMFLOAT3(-1, 1, 0.5);
+	directionalLight3.intensity = 0.3;
+
+	Light pointLight1 = {};
+	pointLight1.type = LIGHT_TYPE_POINT;
+	pointLight1.color = XMFLOAT3(1, 0, 0);
+	pointLight1.position = XMFLOAT3(-4, 1.5, 0);
+	pointLight1.intensity = 1;
+	pointLight1.range = 3;
+
+	Light pointLight2 = {};
+	pointLight2.type = LIGHT_TYPE_POINT;
+	pointLight2.color = XMFLOAT3(0, 1, 0);
+	pointLight2.position = XMFLOAT3(6, -2, -2);
+	pointLight2.intensity = 0.8;
+	pointLight2.range = 3;
+
+	lights.push_back(directionalLight1);
+	lights.push_back(directionalLight2);
+	lights.push_back(directionalLight3);
+	lights.push_back(pointLight1);
+	lights.push_back(pointLight2);
+}
 
 // --------------------------------------------------------
 // Creates the geometry we're going to draw - a single triangle for now
@@ -137,30 +176,7 @@ void Game::Update(float deltaTime, float totalTime)
 	}
 	camera->Update(deltaTime);
 
-	Light directionalLight1 = {};
-	directionalLight1.type = LIGHT_TYPE_DIRECTIONAL;
-	directionalLight1.color = XMFLOAT3(1, 1, 1);
-	directionalLight1.direction = XMFLOAT3(1, 1, 1);
-	directionalLight1.intensity = 1;
 
-
-	Light directionalLight2 = {
-		LIGHT_TYPE_DIRECTIONAL,
-		XMFLOAT3(-1, -1, 0),//direction
-		0,
-		XMFLOAT3(),
-		1, //intensity
-		XMFLOAT3(1, 1, 0) //color
-	};
-	pixelShader->SetData(
-		"directionalLight1", // The name of the (eventual) variable in the shader
-		&directionalLight1, // The address of the data to set
-		sizeof(Light));
-
-	pixelShader->SetData(
-		"directionalLight2", 
-		&directionalLight2, 
-		sizeof(Light));
 
 	// Example input checking: Quit if the escape key is pressed
 	if (Input::GetInstance().KeyDown(VK_ESCAPE))
@@ -187,12 +203,15 @@ void Game::Draw(float deltaTime, float totalTime)
 
 	// We can't do this in Material or MeshEntity because it can't be done to just any shader, just this one in particular
 	basicLightingShader->SetFloat3("cameraPosition", camera->GetTransform().GetPosition());
+	basicLightingShader->SetData("lights", &lights[0], sizeof(Light) * (int)lights.size());
+
 	for (int i = 0; i < meshEntities.size(); ++i) {
 		std::shared_ptr<MeshEntity> currentEntity = meshEntities.at(i);
 		//should work fine without checking (just potentially unneccessary setting), does this help or hurt performance?
 		if (currentEntity->GetMaterial()->GetPixelShader() == basicLightingShader) {
 			currentEntity->GetMaterial()->GetPixelShader()->SetFloat("roughness", currentEntity->GetMaterial()->GetRoughness());
 			currentEntity->GetMaterial()->GetPixelShader()->SetFloat3("ambientColor", ambientColor);
+			
 		}
 		currentEntity -> Draw(camera, context);
 	}
