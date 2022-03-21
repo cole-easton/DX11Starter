@@ -1,8 +1,10 @@
 #include "Material.h"
 
-Material::Material(DirectX::XMFLOAT4 colorTint, std::shared_ptr<SimpleVertexShader> vertexShader, std::shared_ptr<SimplePixelShader> pixelShader)
+// roughness must be within the range 0 - 1
+Material::Material(DirectX::XMFLOAT4 colorTint, float roughness, std::shared_ptr<SimpleVertexShader> vertexShader, std::shared_ptr<SimplePixelShader> pixelShader)
 {
 	this->colorTint = colorTint;
+	this->roughness = roughness;
 	this->vertexShader = vertexShader;
 	this->pixelShader = pixelShader;
 }
@@ -10,6 +12,11 @@ Material::Material(DirectX::XMFLOAT4 colorTint, std::shared_ptr<SimpleVertexShad
 DirectX::XMFLOAT4 Material::GetColorTint()
 {
 	return colorTint;
+}
+
+float Material::GetRoughness()
+{
+	return roughness;
 }
 
 std::shared_ptr<SimpleVertexShader> Material::GetVertexShader()

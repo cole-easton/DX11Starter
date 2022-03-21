@@ -2,6 +2,11 @@
 
 cbuffer externalData : register(b0) {
 	float4 colorTint;
+	float3 cameraPosition;
+	float roughness;
+	float3 ambientColor;
+	Light directionalLight1;
+	Light directionalLight2;
 }
 
 // --------------------------------------------------------
@@ -15,5 +20,7 @@ cbuffer externalData : register(b0) {
 // --------------------------------------------------------
 float4 main(VertexToPixel input) : SV_TARGET
 {
-	return colorTint;
+	//return colorTint * float4(ambientColor, 1);
+	input.normal = normalize(input.normal);
+	return float4(directionalLight1.color, 1);
 }

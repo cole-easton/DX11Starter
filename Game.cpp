@@ -1,6 +1,7 @@
 #include "Game.h"
 #include "Vertex.h"
 #include "Input.h"
+#include "Lights.h"
 
 // Needed for a helper function to read compiled shader files from the hard drive
 #pragma comment(lib, "d3dcompiler.lib")
@@ -42,6 +43,7 @@ Game::~Game()
 {
 	delete basicCyanMaterial;
 	delete funkyMaterial;
+	delete basicLightedMaterial;
 	delete sphereMesh;
 	delete cubeMesh;
 	delete helixMesh;
@@ -60,6 +62,7 @@ void Game::Init()
 	LoadShaders();
 	CreateBasicGeometry();
 	camera = std::make_shared<Camera>(Transform(0, 0, -10, 0, 0, 0, 1, 1, 1), (float)this->width / this->height);
+	ambientColor = XMFLOAT3(0.15, 0.15, 0.25);
 	
 	// Tell the input assembler stage of the pipeline what kind of
 	// geometric primitives (points, lines or triangles) we want to draw.  
@@ -80,6 +83,7 @@ void Game::LoadShaders()
 	vertexShader = std::make_shared<SimpleVertexShader>(device, context, GetFullPathTo_Wide(L"VertexShader.cso").c_str());    
 	pixelShader = std::make_shared<SimplePixelShader>(device, context,GetFullPathTo_Wide(L"PixelShader.cso").c_str());
 	funkyPixelShader = std::make_shared<SimplePixelShader>(device, context, GetFullPathTo_Wide(L"FunkyPixelShader.cso").c_str());
+	basicLightingShader = std::make_shared<SimplePixelShader>(device, context, GetFullPathTo_Wide(L"BasicLightingPixelSHader.cso").c_str());
 }
 
 
@@ -89,21 +93,22 @@ void Game::LoadShaders()
 // --------------------------------------------------------
 void Game::CreateBasicGeometry()
 {
-	basicCyanMaterial = new Material(XMFLOAT4(0, 0.8, 0.8, 1), vertexShader, pixelShader);
-	funkyMaterial = new Material(XMFLOAT4(1, 1, 1, 1), vertexShader, funkyPixelShader);
+	basicCyanMaterial = new Material(XMFLOAT4(0, 0.8, 0.8, 1), 0.15, vertexShader, pixelShader);
+	basicLightedMaterial = new Material(XMFLOAT4(0.9, 0.9, 0.9, 1), 0.15, vertexShader, basicLightingShader);
+	funkyMaterial = new Material(XMFLOAT4(1, 1, 1, 1), 1, vertexShader, funkyPixelShader);
 
 	sphereMesh = new Mesh(GetFullPathTo("../../Assets/Models/sphere.obj").c_str(), device, context);
 	cubeMesh = new Mesh(GetFullPathTo("../../Assets/Models/cube.obj").c_str(), device, context);
 	helixMesh = new Mesh(GetFullPathTo("../../Assets/Models/helix.obj").c_str(), device, context);
 
-	sphere1 = std::make_shared<MeshEntity>(sphereMesh, basicCyanMaterial);
-	sphere1->GetTransform()->SetPosition(-9, 0, 0);
-	cube = std::make_shared<MeshEntity>(cubeMesh, funkyMaterial);
-	cube->GetTransform()->SetPosition(-5, 0, 0);
-	helix = std::make_shared<MeshEntity>(helixMesh, basicCyanMaterial);
-	sphere1->GetTransform()->SetPosition(-1, 0, 0);
-	sphere2 = std::make_shared<MeshEntity>(sphereMesh, funkyMaterial);
-	sphere2->GetTransform()->SetPosition(3, 0, 0);
+	sphere1 = std::make_shared<MeshEntity>(sphereMesh, basicLightedMaterial);
+	sphere1->GetTransform()->SetPosition(-6, 0, 0);
+	cube = std::make_shared<MeshEntity>(cubeMesh, basicLightedMaterial);
+	cube->GetTransform()->SetPosition(-2, 0, 0);
+	helix = std::make_shared<MeshEntity>(helixMesh, basicLightedMaterial);
+	helix->GetTransform()->SetPosition(2, 0, 0);
+	sphere2 = std::make_shared<MeshEntity>(sphereMesh, basicLightedMaterial);
+	sphere2->GetTransform()->SetPosition(6, 0, 0);
 	meshEntities.push_back(sphere1);
 	meshEntities.push_back(cube);
 	meshEntities.push_back(helix);
@@ -131,6 +136,32 @@ void Game::Update(float deltaTime, float totalTime)
 		meshEntities.at(i)->GetTransform()->Turn(-2 * deltaTime, 2 * deltaTime, 2 * deltaTime);
 	}
 	camera->Update(deltaTime);
+
+	Light directionalLight1 = {};
+	directionalLight1.type = LIGHT_TYPE_DIRECTIONAL;
+	directionalLight1.color = XMFLOAT3(1, 1, 1);
+	directionalLight1.direction = XMFLOAT3(1, 1, 1);
+	directionalLight1.intensity = 1;
+
+
+	Light directionalLight2 = {
+		LIGHT_TYPE_DIRECTIONAL,
+		XMFLOAT3(-1, -1, 0),//direction
+		0,
+		XMFLOAT3(),
+		1, //intensity
+		XMFLOAT3(1, 1, 0) //color
+	};
+	pixelShader->SetData(
+		"directionalLight1", // The name of the (eventual) variable in the shader
+		&directionalLight1, // The address of the data to set
+		sizeof(Light));
+
+	pixelShader->SetData(
+		"directionalLight2", 
+		&directionalLight2, 
+		sizeof(Light));
+
 	// Example input checking: Quit if the escape key is pressed
 	if (Input::GetInstance().KeyDown(VK_ESCAPE))
 		Quit();
@@ -154,9 +185,16 @@ void Game::Draw(float deltaTime, float totalTime)
 		1.0f,
 		0);
 
-
+	// We can't do this in Material or MeshEntity because it can't be done to just any shader, just this one in particular
+	basicLightingShader->SetFloat3("cameraPosition", camera->GetTransform().GetPosition());
 	for (int i = 0; i < meshEntities.size(); ++i) {
-		meshEntities.at(i) -> Draw(camera, context);
+		std::shared_ptr<MeshEntity> currentEntity = meshEntities.at(i);
+		//should work fine without checking (just potentially unneccessary setting), does this help or hurt performance?
+		if (currentEntity->GetMaterial()->GetPixelShader() == basicLightingShader) {
+			currentEntity->GetMaterial()->GetPixelShader()->SetFloat("roughness", currentEntity->GetMaterial()->GetRoughness());
+			currentEntity->GetMaterial()->GetPixelShader()->SetFloat3("ambientColor", ambientColor);
+		}
+		currentEntity -> Draw(camera, context);
 	}
 
 	// Present the back buffer to the user

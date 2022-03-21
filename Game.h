@@ -1,7 +1,7 @@
 #pragma once
 
 #include "DXCore.h"
-#include <DirectXMath.h>
+
 #include <wrl/client.h> // Used for ComPtr - a smart pointer for COM objects
 #include <memory>
 #include <vector>
@@ -34,6 +34,7 @@ private:
 	// Shaders and shader-related constructs
 	std::shared_ptr<SimplePixelShader> pixelShader;
 	std::shared_ptr<SimplePixelShader> funkyPixelShader;
+	std::shared_ptr<SimplePixelShader> basicLightingShader;
 	std::shared_ptr<SimpleVertexShader> vertexShader;
 
 	std::shared_ptr<Camera> camera;
@@ -51,7 +52,10 @@ private:
 
 	Material* basicCyanMaterial;
 	Material* funkyMaterial;
-	
+	Material* basicLightedMaterial;
+	Material* experimentalLightingMaterial;
+
+	DirectX::XMFLOAT3 ambientColor;
 
 	// Initialization helper methods - feel free to customize, combine, etc.
 	void LoadShaders(); 

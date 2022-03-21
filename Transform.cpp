@@ -89,7 +89,9 @@ XMFLOAT4X4 Transform::GetWorldMatrix()
 
 XMFLOAT4X4 Transform::GetWorldInverseTransposeMatrix()
 {
-	return DirectX::XMFLOAT4X4();
+	XMFLOAT4X4 worldInvTranspose;
+	XMStoreFloat4x4(&worldInvTranspose, XMMatrixInverse(nullptr, XMMatrixTranspose(XMLoadFloat4x4(&GetWorldMatrix()))));
+	return worldInverseTranspose;
 }
 
 void Transform::Translate(float x, float y, float z)

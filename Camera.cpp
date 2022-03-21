@@ -54,7 +54,7 @@ void Camera::Update(float dt)
 		transform.Move(0, 0, movementSpeed * dt);
 	}
 	if (input.KeyDown('S') || input.KeyDown(VK_DOWN)) {
-		transform.Move(0, 0, movementSpeed * dt);
+		transform.Move(0, 0, -movementSpeed * dt);
 	}
 	if (input.KeyDown('A') || input.KeyDown(VK_LEFT)) {
 		transform.Move(-movementSpeed * dt, 0, 0);
