@@ -2,6 +2,7 @@
 #include "Vertex.h"
 #include "Input.h"
 #include "Lights.h"
+#include "WICTextureLoader.h"
 
 // Needed for a helper function to read compiled shader files from the hard drive
 #pragma comment(lib, "d3dcompiler.lib")
@@ -44,6 +45,8 @@ Game::~Game()
 	delete basicCyanMaterial;
 	delete funkyMaterial;
 	delete basicLightedMaterial;
+	delete asteroidMaterial;
+	delete metalHatchMaterial;
 	delete sphereMesh;
 	delete cubeMesh;
 	delete helixMesh;
@@ -96,26 +99,26 @@ void Game::SetLights() {
 
 	Light directionalLight2 = {};
 	directionalLight2.type = LIGHT_TYPE_DIRECTIONAL;
-	directionalLight2.color = XMFLOAT3(1, 1, 0);
+	directionalLight2.color = XMFLOAT3(1, 1, 1);
 	directionalLight2.direction = XMFLOAT3(-1, -1, 0);
-	directionalLight2.intensity = 0.6;
+	directionalLight2.intensity = 0.9;
 
 	Light directionalLight3 = {};
 	directionalLight3.type = LIGHT_TYPE_DIRECTIONAL;
-	directionalLight3.color = XMFLOAT3(0, 0, 1);
-	directionalLight3.direction = XMFLOAT3(-1, 1, 0.5);
-	directionalLight3.intensity = 0.3;
+	directionalLight3.color = XMFLOAT3(1, 1, 1);
+	directionalLight3.direction = XMFLOAT3(0, 0, 1);
+	directionalLight3.intensity = 1.3;
 
 	Light pointLight1 = {};
 	pointLight1.type = LIGHT_TYPE_POINT;
-	pointLight1.color = XMFLOAT3(1, 0, 0);
+	pointLight1.color = XMFLOAT3(1, 1, 1);
 	pointLight1.position = XMFLOAT3(-4, 1.5, 0);
 	pointLight1.intensity = 1;
 	pointLight1.range = 3;
 
 	Light pointLight2 = {};
 	pointLight2.type = LIGHT_TYPE_POINT;
-	pointLight2.color = XMFLOAT3(0, 1, 0);
+	pointLight2.color = XMFLOAT3(1, 1, 1);
 	pointLight2.position = XMFLOAT3(6, -2, -2);
 	pointLight2.intensity = 0.8;
 	pointLight2.range = 3;
@@ -132,21 +135,44 @@ void Game::SetLights() {
 // --------------------------------------------------------
 void Game::CreateBasicGeometry()
 {
+	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/metalhatch_albedo.tif").c_str(), 0, metalHatchTex.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/metalhatch_roughness.tif").c_str(), 0, metalHatchRoughness.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/asteroid_albedo.tif").c_str(), 0, asteroidTex.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/asteroid_roughness.tif").c_str(), 0, asteroidRoughness.GetAddressOf());
+
+	D3D11_SAMPLER_DESC desc = {};
+	desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	desc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	desc.Filter = D3D11_FILTER_ANISOTROPIC;
+	desc.MaxAnisotropy = 8; //1-16, higher is slower -- possibly adjust this later
+	desc.MaxLOD = D3D11_FLOAT32_MAX;
+	device->CreateSamplerState(&desc, samplerState.GetAddressOf());
+
 	basicCyanMaterial = new Material(XMFLOAT4(0, 0.8, 0.8, 1), 0.15, vertexShader, pixelShader);
 	basicLightedMaterial = new Material(XMFLOAT4(0.9, 0.9, 0.9, 1), 0.15, vertexShader, basicLightingShader);
 	funkyMaterial = new Material(XMFLOAT4(1, 1, 1, 1), 1, vertexShader, funkyPixelShader);
+	metalHatchMaterial = new Material(XMFLOAT4(1, 1, 1, 1), 0.10, vertexShader, basicLightingShader);
+	asteroidMaterial = new Material(XMFLOAT4(1, 1, 1, 1), 0.5, vertexShader, basicLightingShader);
+
+	metalHatchMaterial->AddTextureSRV("SurfaceTexture", metalHatchTex);
+	metalHatchMaterial->AddTextureSRV("RoughnessTexture", metalHatchRoughness);
+	metalHatchMaterial->AddSampler("Sampler", samplerState); //can't call ut SamplerState because thats an HLSL keyword
+	asteroidMaterial->AddTextureSRV("SurfaceTexture", asteroidTex);
+	asteroidMaterial->AddTextureSRV("RoughnessTexture", asteroidRoughness);
+	asteroidMaterial->AddSampler("Sampler", samplerState);
 
 	sphereMesh = new Mesh(GetFullPathTo("../../Assets/Models/sphere.obj").c_str(), device, context);
 	cubeMesh = new Mesh(GetFullPathTo("../../Assets/Models/cube.obj").c_str(), device, context);
 	helixMesh = new Mesh(GetFullPathTo("../../Assets/Models/helix.obj").c_str(), device, context);
 
-	sphere1 = std::make_shared<MeshEntity>(sphereMesh, basicLightedMaterial);
+	sphere1 = std::make_shared<MeshEntity>(sphereMesh, metalHatchMaterial);
 	sphere1->GetTransform()->SetPosition(-6, 0, 0);
-	cube = std::make_shared<MeshEntity>(cubeMesh, basicLightedMaterial);
+	cube = std::make_shared<MeshEntity>(cubeMesh, asteroidMaterial);
 	cube->GetTransform()->SetPosition(-2, 0, 0);
-	helix = std::make_shared<MeshEntity>(helixMesh, basicLightedMaterial);
+	helix = std::make_shared<MeshEntity>(helixMesh, metalHatchMaterial);
 	helix->GetTransform()->SetPosition(2, 0, 0);
-	sphere2 = std::make_shared<MeshEntity>(sphereMesh, basicLightedMaterial);
+	sphere2 = std::make_shared<MeshEntity>(sphereMesh, asteroidMaterial);
 	sphere2->GetTransform()->SetPosition(6, 0, 0);
 	meshEntities.push_back(sphere1);
 	meshEntities.push_back(cube);
@@ -172,7 +198,7 @@ void Game::OnResize()
 void Game::Update(float deltaTime, float totalTime)
 {
 	for (int i = 0; i < meshEntities.size(); ++i) {
-		meshEntities.at(i)->GetTransform()->Turn(-2 * deltaTime, 2 * deltaTime, 2 * deltaTime);
+		meshEntities.at(i)->GetTransform()->Turn(-0.5 * deltaTime, 0.5 * deltaTime, 0.5 * deltaTime);
 	}
 	camera->Update(deltaTime);
 
@@ -209,6 +235,7 @@ void Game::Draw(float deltaTime, float totalTime)
 		std::shared_ptr<MeshEntity> currentEntity = meshEntities.at(i);
 		//should work fine without checking (just potentially unneccessary setting), does this help or hurt performance?
 		if (currentEntity->GetMaterial()->GetPixelShader() == basicLightingShader) {
+			currentEntity->GetMaterial()->BindResources();
 			currentEntity->GetMaterial()->GetPixelShader()->SetFloat("roughness", currentEntity->GetMaterial()->GetRoughness());
 			currentEntity->GetMaterial()->GetPixelShader()->SetFloat3("ambientColor", ambientColor);
 			

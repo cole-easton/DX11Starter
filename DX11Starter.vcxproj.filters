@@ -105,5 +105,6 @@
     <None Include="StructIncludes.hlsli">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

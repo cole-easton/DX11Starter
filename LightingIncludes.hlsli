@@ -40,7 +40,7 @@ float3 specularColor(Light light, float3 normal, float3 worldPosition, float3 ca
 }
 
 float3 calculateTotalLighting(Light light, LightingInfo info) {
-	float3 result = light.intensity.rrr*(diffuseColor(light, info.normal, info.worldPosition) * info.surfaceColor + specularColor(light, info.normal, info.worldPosition, info.cameraPosition, info.roughness)) + info.ambientColor;
+	float3 result = light.intensity.rrr * (diffuseColor(light, info.normal, info.worldPosition) * info.surfaceColor + specularColor(light, info.normal, info.worldPosition, info.cameraPosition, info.roughness) * info.specularMultiplier);
 	if (light.type == LIGHT_TYPE_POINT) {
 		result *= attenuate(light, info.worldPosition).rrr;
 	}

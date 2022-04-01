@@ -51,10 +51,18 @@ private:
 
 	std::vector<std::shared_ptr<MeshEntity>> meshEntities;
 
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> metalHatchTex;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> metalHatchRoughness;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> asteroidTex;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> asteroidRoughness;
+	Microsoft::WRL::ComPtr<ID3D11SamplerState> samplerState;
+
 	Material* basicCyanMaterial;
 	Material* funkyMaterial;
 	Material* basicLightedMaterial;
 	Material* experimentalLightingMaterial;
+	Material* metalHatchMaterial;
+	Material* asteroidMaterial;
 
 	std::vector<Light> lights;
 

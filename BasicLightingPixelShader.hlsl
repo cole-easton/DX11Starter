@@ -9,6 +9,10 @@ cbuffer externalData : register(b0) {
 	Light lights[5];
 }
 
+Texture2D SurfaceTexture : register(t0);
+Texture2D RoughnessTexture : register(t1);
+SamplerState Sampler : register(s0);
+
 // --------------------------------------------------------
 // The entry point (main method) for our pixel shader
 // 
@@ -24,12 +28,12 @@ float4 main(VertexToPixel input) : SV_TARGET
 	LightingInfo info;
 	info.normal = input.normal;
 	info.roughness = roughness;
+	info.specularMultiplier = 1-RoughnessTexture.Sample(Sampler, input.uv/3).r;
 	info.worldPosition = input.worldPosition;
 	info.cameraPosition = cameraPosition;
-	info.surfaceColor = colorTint;
-	info.ambientColor = ambientColor;
+	info.surfaceColor = colorTint * SurfaceTexture.Sample(Sampler, input.uv/3).rgb;
 
-	float3 pixelColor = float3(0, 0, 0);
+	float3 pixelColor = ambientColor;
 	for (int i = 0; i < 5; i++) {
 		pixelColor += calculateTotalLighting(lights[i], info);
 
