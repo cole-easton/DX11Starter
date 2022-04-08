@@ -7,7 +7,7 @@ using namespace DirectX;
 
 Camera::Camera(float x, float y, float z, float aspectRatio) : Camera(Transform(x, y, z, 0, 0, 0, 1, 1, 1), aspectRatio) {}
 
-Camera::Camera(Transform transform, float aspectRatio) : Camera(transform, aspectRatio, 1, 0.01, 1000, 0.5, 1) {}
+Camera::Camera(Transform transform, float aspectRatio) : Camera(transform, aspectRatio, 1, 0.01, 1000, 4, 1) {}
 
 Camera::Camera(Transform transform, float aspectRatio, float frustumRadians, float nearPlane, float farPlane, float movementSpeed, float mouseLookSpeed)
 {
@@ -56,11 +56,17 @@ void Camera::Update(float dt)
 	if (input.KeyDown('S') || input.KeyDown(VK_DOWN)) {
 		transform.Move(0, 0, -movementSpeed * dt);
 	}
-	if (input.KeyDown('A') || input.KeyDown(VK_LEFT)) {
+	if (input.KeyDown('A')) {
 		transform.Move(-movementSpeed * dt, 0, 0);
 	}
-	if (input.KeyDown('D') || input.KeyDown(VK_RIGHT)) {
+	if (input.KeyDown('D')) {
 		transform.Move(movementSpeed * dt, 0, 0);
+	}
+	if (input.KeyDown(VK_LEFT)) {
+		transform.Turn(0, -dt, 0);
+	}
+	if (input.KeyDown(VK_RIGHT)) {
+		transform.Turn(0, dt, 0);
 	}
 	if (input.KeyDown(VK_SPACE)) {
 		transform.Translate(0, movementSpeed * dt, 0);

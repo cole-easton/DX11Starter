@@ -1,3 +1,4 @@
+#include <DDSTextureLoader.h>
 #include "Game.h"
 #include "Vertex.h"
 #include "Input.h"
@@ -50,7 +51,7 @@ Game::~Game()
 	delete sphereMesh;
 	delete cubeMesh;
 	delete helixMesh;
-
+	delete skyBox;
 }
 
 // --------------------------------------------------------
@@ -86,6 +87,8 @@ void Game::LoadShaders()
 {
 	vertexShader = std::make_shared<SimpleVertexShader>(device, context, GetFullPathTo_Wide(L"VertexShader.cso").c_str());    
 	pixelShader = std::make_shared<SimplePixelShader>(device, context,GetFullPathTo_Wide(L"PixelShader.cso").c_str());
+	skyBoxVertexShader = std::make_shared<SimpleVertexShader>(device, context, GetFullPathTo_Wide(L"SkyBoxVertexShader.cso").c_str());
+	skyBoxPixelShader = std::make_shared<SimplePixelShader>(device, context, GetFullPathTo_Wide(L"SkyBoxPixelShader.cso").c_str());
 	funkyPixelShader = std::make_shared<SimplePixelShader>(device, context, GetFullPathTo_Wide(L"FunkyPixelShader.cso").c_str());
 	basicLightingShader = std::make_shared<SimplePixelShader>(device, context, GetFullPathTo_Wide(L"BasicLightingPixelSHader.cso").c_str());
 }
@@ -137,8 +140,11 @@ void Game::CreateBasicGeometry()
 {
 	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/metalhatch_albedo.tif").c_str(), 0, metalHatchTex.GetAddressOf());
 	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/metalhatch_roughness.tif").c_str(), 0, metalHatchRoughness.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/metalhatch_normal.tif").c_str(), 0, metalHatchNormal.GetAddressOf());
 	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/asteroid_albedo.tif").c_str(), 0, asteroidTex.GetAddressOf());
 	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/asteroid_roughness.tif").c_str(), 0, asteroidRoughness.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/asteroid_normal.tif").c_str(), 0, asteroidNormal.GetAddressOf());
+	CreateDDSTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/SunnyCubeMap.dds").c_str(), 0, skyBoxTex.GetAddressOf());
 
 	D3D11_SAMPLER_DESC desc = {};
 	desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -157,9 +163,11 @@ void Game::CreateBasicGeometry()
 
 	metalHatchMaterial->AddTextureSRV("SurfaceTexture", metalHatchTex);
 	metalHatchMaterial->AddTextureSRV("RoughnessTexture", metalHatchRoughness);
+	metalHatchMaterial->AddTextureSRV("NormalMap", metalHatchNormal);
 	metalHatchMaterial->AddSampler("Sampler", samplerState); //can't call ut SamplerState because thats an HLSL keyword
 	asteroidMaterial->AddTextureSRV("SurfaceTexture", asteroidTex);
 	asteroidMaterial->AddTextureSRV("RoughnessTexture", asteroidRoughness);
+	asteroidMaterial->AddTextureSRV("NormalMap", asteroidNormal);
 	asteroidMaterial->AddSampler("Sampler", samplerState);
 
 	sphereMesh = new Mesh(GetFullPathTo("../../Assets/Models/sphere.obj").c_str(), device, context);
@@ -178,6 +186,8 @@ void Game::CreateBasicGeometry()
 	meshEntities.push_back(cube);
 	meshEntities.push_back(helix);
 	meshEntities.push_back(sphere2);
+
+	skyBox = new SkyBox(cubeMesh, skyBoxTex, skyBoxVertexShader, skyBoxPixelShader, samplerState, device);
 }
 
 
@@ -242,6 +252,7 @@ void Game::Draw(float deltaTime, float totalTime)
 		}
 		currentEntity -> Draw(camera, context);
 	}
+	skyBox->Draw(camera, context); //after drawing objects
 
 	// Present the back buffer to the user
 	//  - Puts the final frame we're drawing into the window so the user can see it

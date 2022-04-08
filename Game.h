@@ -11,6 +11,7 @@
 #include "Mesh.h"
 #include "MeshEntity.h"
 #include "Camera.h"
+#include "Skybox.h";
 
 class Game 
 	: public DXCore
@@ -36,13 +37,17 @@ private:
 	std::shared_ptr<SimplePixelShader> pixelShader;
 	std::shared_ptr<SimplePixelShader> funkyPixelShader;
 	std::shared_ptr<SimplePixelShader> basicLightingShader;
+	std::shared_ptr<SimplePixelShader> skyBoxPixelShader;
 	std::shared_ptr<SimpleVertexShader> vertexShader;
+	std::shared_ptr<SimpleVertexShader> skyBoxVertexShader;
 
 	std::shared_ptr<Camera> camera;
 
 	Mesh* sphereMesh;
 	Mesh* cubeMesh;
 	Mesh* helixMesh;
+
+	SkyBox* skyBox;
 
 	std::shared_ptr<MeshEntity> sphere1;
 	std::shared_ptr<MeshEntity> sphere2;
@@ -53,8 +58,11 @@ private:
 
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> metalHatchTex;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> metalHatchRoughness;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> metalHatchNormal;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> asteroidTex;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> asteroidRoughness;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> asteroidNormal;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> skyBoxTex;
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> samplerState;
 
 	Material* basicCyanMaterial;

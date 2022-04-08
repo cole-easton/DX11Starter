@@ -21,7 +21,14 @@ struct VertexToPixel
 	float4 screenPosition	: SV_POSITION;
 	float2 uv				: TEXCOORD;
 	float3 normal			: NORMAL;
+	float3 tangent			: TANGENT;
 	float3 worldPosition	: POSITION;
+};
+
+struct SkyBoxVertexToPixel 
+{
+	float4 position	: SV_POSITION;
+	float3 sampleDir : DIRECTION;
 };
 
 // Struct representing a single vertex worth of data
@@ -38,6 +45,7 @@ struct VertexShaderInput
 	//  v    v                v
 	float3 localPosition	: POSITION;     // XYZ position
 	float3 normal			: NORMAL;
+	float3 tangent			: TANGENT;
 	float2 uv				: TEXCOORD;
 };
 

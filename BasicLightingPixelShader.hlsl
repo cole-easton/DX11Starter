@@ -11,6 +11,7 @@ cbuffer externalData : register(b0) {
 
 Texture2D SurfaceTexture : register(t0);
 Texture2D RoughnessTexture : register(t1);
+Texture2D NormalMap : register(t2);
 SamplerState Sampler : register(s0);
 
 // --------------------------------------------------------
@@ -24,14 +25,22 @@ SamplerState Sampler : register(s0);
 // --------------------------------------------------------
 float4 main(VertexToPixel input) : SV_TARGET
 {
+	float3 unpackedNormal = NormalMap.Sample(Sampler, input.uv/2).rgb * 2 - 1;
+
 	input.normal = normalize(input.normal);
+	input.tangent = normalize(input.tangent);
+	input.tangent = normalize(input.tangent - input.normal * dot(input.tangent, input.normal)); // Gram-Schmidt assumes T&N are normalized!
+	float3 bitangent = cross(input.tangent, input.normal);
+	float3x3 TBN = float3x3(input.tangent, bitangent, input.normal);
+	input.normal = mul(unpackedNormal, TBN);
+
 	LightingInfo info;
 	info.normal = input.normal;
 	info.roughness = roughness;
-	info.specularMultiplier = 1-RoughnessTexture.Sample(Sampler, input.uv/3).r;
+	info.specularMultiplier = 1-RoughnessTexture.Sample(Sampler, input.uv/2).r;
 	info.worldPosition = input.worldPosition;
 	info.cameraPosition = cameraPosition;
-	info.surfaceColor = colorTint * SurfaceTexture.Sample(Sampler, input.uv/3).rgb;
+	info.surfaceColor = colorTint * SurfaceTexture.Sample(Sampler, input.uv/2).rgb;
 
 	float3 pixelColor = ambientColor;
 	for (int i = 0; i < 5; i++) {
