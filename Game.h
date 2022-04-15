@@ -11,7 +11,7 @@
 #include "Mesh.h"
 #include "MeshEntity.h"
 #include "Camera.h"
-#include "Skybox.h";
+#include "Skybox.h"
 
 class Game 
 	: public DXCore
@@ -59,9 +59,19 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> metalHatchTex;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> metalHatchRoughness;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> metalHatchNormal;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> metalHatchMetalness;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> asteroidTex;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> asteroidRoughness;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> asteroidNormal;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> asteroidMetalness;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> scratchedTex;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> scratchedRoughness;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> scratchedNormal;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> scratchedMetalness;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> copperTex;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> copperRoughness;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> copperNormal;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> copperMetalness;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> skyBoxTex;
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> samplerState;
 
@@ -71,6 +81,8 @@ private:
 	Material* experimentalLightingMaterial;
 	Material* metalHatchMaterial;
 	Material* asteroidMaterial;
+	Material* scratchedMaterial;
+	Material* copperMaterial;
 
 	std::vector<Light> lights;
 

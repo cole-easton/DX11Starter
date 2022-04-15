@@ -64,7 +64,7 @@ struct LightingInfo {
 	float3 normal			: NORMAL;
 	float roughness			: ROUGHNESS;
 	float3 worldPosition	: POSITION;
-	float specularMultiplier: PADDING;
+	float metalness			: PADDING;
 	float3 cameraPosition	: POSITION;
 	float padding1			: PADDING;
 	float3 surfaceColor		: COLOR;

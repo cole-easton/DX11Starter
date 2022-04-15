@@ -4,14 +4,13 @@
 cbuffer externalData : register(b0) {
 	float4 colorTint;
 	float3 cameraPosition;
-	float roughness;
-	float3 ambientColor;
 	Light lights[5];
 }
 
-Texture2D SurfaceTexture : register(t0);
-Texture2D RoughnessTexture : register(t1);
+Texture2D Albedo : register(t0);
+Texture2D RoughnessMap : register(t1);
 Texture2D NormalMap : register(t2);
+Texture2D MetalnessMap : register(t3);
 SamplerState Sampler : register(s0);
 
 // --------------------------------------------------------
@@ -25,7 +24,8 @@ SamplerState Sampler : register(s0);
 // --------------------------------------------------------
 float4 main(VertexToPixel input) : SV_TARGET
 {
-	float3 unpackedNormal = NormalMap.Sample(Sampler, input.uv/2).rgb * 2 - 1;
+	int texScale = 2;
+	float3 unpackedNormal = NormalMap.Sample(Sampler, input.uv/texScale).rgb * 2 - 1;
 
 	input.normal = normalize(input.normal);
 	input.tangent = normalize(input.tangent);
@@ -34,19 +34,21 @@ float4 main(VertexToPixel input) : SV_TARGET
 	float3x3 TBN = float3x3(input.tangent, bitangent, input.normal);
 	input.normal = mul(unpackedNormal, TBN);
 
+	float metalness = MetalnessMap.Sample(Sampler, input.uv / texScale).r;
+
 	LightingInfo info;
 	info.normal = input.normal;
-	info.roughness = roughness;
-	info.specularMultiplier = 1-RoughnessTexture.Sample(Sampler, input.uv/2).r;
+	info.roughness = RoughnessMap.Sample(Sampler, input.uv / texScale).r;
+	info.metalness = MetalnessMap.Sample(Sampler, input.uv / texScale).r;
 	info.worldPosition = input.worldPosition;
 	info.cameraPosition = cameraPosition;
-	info.surfaceColor = colorTint * SurfaceTexture.Sample(Sampler, input.uv/2).rgb;
+	info.surfaceColor = colorTint * pow(Albedo.Sample(Sampler, input.uv/texScale).rgb, 2.2);
 
-	float3 pixelColor = ambientColor;
+	float3 pixelColor = 0;
 	for (int i = 0; i < 5; i++) {
 		pixelColor += calculateTotalLighting(lights[i], info);
 
 	}
-	return float4(pixelColor, 1);
+	return float4(pow(pixelColor, 1.0f/2.2f), 1);
 
 }

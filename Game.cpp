@@ -48,6 +48,8 @@ Game::~Game()
 	delete basicLightedMaterial;
 	delete asteroidMaterial;
 	delete metalHatchMaterial;
+	delete scratchedMaterial;
+	delete copperMaterial;
 	delete sphereMesh;
 	delete cubeMesh;
 	delete helixMesh;
@@ -67,7 +69,7 @@ void Game::Init()
 	CreateBasicGeometry();
 	SetLights();
 	camera = std::make_shared<Camera>(Transform(0, 0, -10, 0, 0, 0, 1, 1, 1), (float)this->width / this->height);
-	ambientColor = XMFLOAT3(0.15, 0.15, 0.25);
+	ambientColor = XMFLOAT3(0.15f, 0.15f, 0.25f);
 	
 	// Tell the input assembler stage of the pipeline what kind of
 	// geometric primitives (points, lines or triangles) we want to draw.  
@@ -98,19 +100,19 @@ void Game::SetLights() {
 	directionalLight1.type = LIGHT_TYPE_DIRECTIONAL;
 	directionalLight1.color = XMFLOAT3(1, 1, 1);
 	directionalLight1.direction = XMFLOAT3(1, 0, 0);
-	directionalLight1.intensity = 0.6;
+	directionalLight1.intensity = 0.6f;
 
 	Light directionalLight2 = {};
 	directionalLight2.type = LIGHT_TYPE_DIRECTIONAL;
 	directionalLight2.color = XMFLOAT3(1, 1, 1);
 	directionalLight2.direction = XMFLOAT3(-1, -1, 0);
-	directionalLight2.intensity = 0.9;
+	directionalLight2.intensity = 0.9f;
 
 	Light directionalLight3 = {};
 	directionalLight3.type = LIGHT_TYPE_DIRECTIONAL;
 	directionalLight3.color = XMFLOAT3(1, 1, 1);
 	directionalLight3.direction = XMFLOAT3(0, 0, 1);
-	directionalLight3.intensity = 1.3;
+	directionalLight3.intensity = 1.3f;
 
 	Light pointLight1 = {};
 	pointLight1.type = LIGHT_TYPE_POINT;
@@ -123,7 +125,7 @@ void Game::SetLights() {
 	pointLight2.type = LIGHT_TYPE_POINT;
 	pointLight2.color = XMFLOAT3(1, 1, 1);
 	pointLight2.position = XMFLOAT3(6, -2, -2);
-	pointLight2.intensity = 0.8;
+	pointLight2.intensity = 0.8f;
 	pointLight2.range = 3;
 
 	lights.push_back(directionalLight1);
@@ -141,9 +143,19 @@ void Game::CreateBasicGeometry()
 	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/metalhatch_albedo.tif").c_str(), 0, metalHatchTex.GetAddressOf());
 	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/metalhatch_roughness.tif").c_str(), 0, metalHatchRoughness.GetAddressOf());
 	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/metalhatch_normal.tif").c_str(), 0, metalHatchNormal.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/metalhatch_metalness.tif").c_str(), 0, metalHatchMetalness.GetAddressOf());
 	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/asteroid_albedo.tif").c_str(), 0, asteroidTex.GetAddressOf());
 	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/asteroid_roughness.tif").c_str(), 0, asteroidRoughness.GetAddressOf());
 	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/asteroid_normal.tif").c_str(), 0, asteroidNormal.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/asteroid_metalness.png").c_str(), 0, asteroidMetalness.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/scratched_albedo.png").c_str(), 0, scratchedTex.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/scratched_roughness.png").c_str(), 0, scratchedRoughness.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/scratched_normal.png").c_str(), 0, scratchedNormal.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/scratched_metalness.png").c_str(), 0, scratchedMetalness.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/copper_albedo.tif").c_str(), 0, copperTex.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/copper_roughness.tif").c_str(), 0, copperRoughness.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/copper_normal.tif").c_str(), 0, copperNormal.GetAddressOf());
+	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/copper_metalness.png").c_str(), 0, copperMetalness.GetAddressOf());
 	CreateDDSTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/SunnyCubeMap.dds").c_str(), 0, skyBoxTex.GetAddressOf());
 
 	D3D11_SAMPLER_DESC desc = {};
@@ -155,30 +167,44 @@ void Game::CreateBasicGeometry()
 	desc.MaxLOD = D3D11_FLOAT32_MAX;
 	device->CreateSamplerState(&desc, samplerState.GetAddressOf());
 
-	basicCyanMaterial = new Material(XMFLOAT4(0, 0.8, 0.8, 1), 0.15, vertexShader, pixelShader);
-	basicLightedMaterial = new Material(XMFLOAT4(0.9, 0.9, 0.9, 1), 0.15, vertexShader, basicLightingShader);
-	funkyMaterial = new Material(XMFLOAT4(1, 1, 1, 1), 1, vertexShader, funkyPixelShader);
-	metalHatchMaterial = new Material(XMFLOAT4(1, 1, 1, 1), 0.10, vertexShader, basicLightingShader);
-	asteroidMaterial = new Material(XMFLOAT4(1, 1, 1, 1), 0.5, vertexShader, basicLightingShader);
+	basicCyanMaterial = new Material(XMFLOAT4(0, 0.8f, 0.8f, 1), vertexShader, pixelShader);
+	basicLightedMaterial = new Material(XMFLOAT4(0.9f, 0.9f, 0.9f, 1), vertexShader, basicLightingShader);
+	funkyMaterial = new Material(XMFLOAT4(1, 1, 1, 1), vertexShader, funkyPixelShader);
+	metalHatchMaterial = new Material(XMFLOAT4(1, 1, 1, 1), vertexShader, basicLightingShader);
+	asteroidMaterial = new Material(XMFLOAT4(1, 1, 1, 1), vertexShader, basicLightingShader);
+	scratchedMaterial = new Material(XMFLOAT4(1, 1, 1, 1), vertexShader, basicLightingShader);
+	copperMaterial = new Material(XMFLOAT4(1, 1, 1, 1), vertexShader, basicLightingShader);
 
-	metalHatchMaterial->AddTextureSRV("SurfaceTexture", metalHatchTex);
-	metalHatchMaterial->AddTextureSRV("RoughnessTexture", metalHatchRoughness);
+	metalHatchMaterial->AddTextureSRV("Albedo", metalHatchTex);
+	metalHatchMaterial->AddTextureSRV("RoughnessMap", metalHatchRoughness);
 	metalHatchMaterial->AddTextureSRV("NormalMap", metalHatchNormal);
+	metalHatchMaterial->AddTextureSRV("MetalnessMap", metalHatchMetalness);
 	metalHatchMaterial->AddSampler("Sampler", samplerState); //can't call ut SamplerState because thats an HLSL keyword
-	asteroidMaterial->AddTextureSRV("SurfaceTexture", asteroidTex);
-	asteroidMaterial->AddTextureSRV("RoughnessTexture", asteroidRoughness);
+	asteroidMaterial->AddTextureSRV("Albedo", asteroidTex);
+	asteroidMaterial->AddTextureSRV("RoughnessMap", asteroidRoughness);
 	asteroidMaterial->AddTextureSRV("NormalMap", asteroidNormal);
+	asteroidMaterial->AddTextureSRV("MetalnessMap", asteroidMetalness);
 	asteroidMaterial->AddSampler("Sampler", samplerState);
-
+	scratchedMaterial->AddTextureSRV("Albedo", scratchedTex);
+	scratchedMaterial->AddTextureSRV("RoughnessMap", scratchedRoughness);
+	scratchedMaterial->AddTextureSRV("NormalMap", scratchedNormal);
+	scratchedMaterial->AddTextureSRV("MetalnessMap", scratchedMetalness);
+	scratchedMaterial->AddSampler("Sampler", samplerState);
+	copperMaterial->AddTextureSRV("Albedo", copperTex);
+	copperMaterial->AddTextureSRV("RoughnessMap", copperRoughness);
+	copperMaterial->AddTextureSRV("NormalMap", copperNormal);
+	copperMaterial->AddTextureSRV("MetalnessMap", copperMetalness);
+	copperMaterial->AddSampler("Sampler", samplerState);
+	
 	sphereMesh = new Mesh(GetFullPathTo("../../Assets/Models/sphere.obj").c_str(), device, context);
 	cubeMesh = new Mesh(GetFullPathTo("../../Assets/Models/cube.obj").c_str(), device, context);
 	helixMesh = new Mesh(GetFullPathTo("../../Assets/Models/helix.obj").c_str(), device, context);
 
-	sphere1 = std::make_shared<MeshEntity>(sphereMesh, metalHatchMaterial);
+	sphere1 = std::make_shared<MeshEntity>(sphereMesh, scratchedMaterial);
 	sphere1->GetTransform()->SetPosition(-6, 0, 0);
-	cube = std::make_shared<MeshEntity>(cubeMesh, asteroidMaterial);
+	cube = std::make_shared<MeshEntity>(cubeMesh, metalHatchMaterial);
 	cube->GetTransform()->SetPosition(-2, 0, 0);
-	helix = std::make_shared<MeshEntity>(helixMesh, metalHatchMaterial);
+	helix = std::make_shared<MeshEntity>(helixMesh, copperMaterial);
 	helix->GetTransform()->SetPosition(2, 0, 0);
 	sphere2 = std::make_shared<MeshEntity>(sphereMesh, asteroidMaterial);
 	sphere2->GetTransform()->SetPosition(6, 0, 0);
@@ -208,7 +234,7 @@ void Game::OnResize()
 void Game::Update(float deltaTime, float totalTime)
 {
 	for (int i = 0; i < meshEntities.size(); ++i) {
-		meshEntities.at(i)->GetTransform()->Turn(-0.5 * deltaTime, 0.5 * deltaTime, 0.5 * deltaTime);
+		meshEntities.at(i)->GetTransform()->Turn(-0.5f * deltaTime, 0.5f * deltaTime, 0.5f * deltaTime);
 	}
 	camera->Update(deltaTime);
 
