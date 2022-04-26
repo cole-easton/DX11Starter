@@ -109,6 +109,9 @@
     <FxCompile Include="SkyBoxPixelShader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="TransparencyPixelShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="LightingIncludes.hlsli">

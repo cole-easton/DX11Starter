@@ -43,13 +43,11 @@ Game::Game(HINSTANCE hInstance)
 // --------------------------------------------------------
 Game::~Game()
 {
-	delete basicCyanMaterial;
-	delete funkyMaterial;
-	delete basicLightedMaterial;
 	delete asteroidMaterial;
 	delete metalHatchMaterial;
 	delete scratchedMaterial;
 	delete copperMaterial;
+	delete transparentMaterial;
 	delete sphereMesh;
 	delete cubeMesh;
 	delete helixMesh;
@@ -88,11 +86,10 @@ void Game::Init()
 void Game::LoadShaders()
 {
 	vertexShader = std::make_shared<SimpleVertexShader>(device, context, GetFullPathTo_Wide(L"VertexShader.cso").c_str());    
-	pixelShader = std::make_shared<SimplePixelShader>(device, context,GetFullPathTo_Wide(L"PixelShader.cso").c_str());
 	skyBoxVertexShader = std::make_shared<SimpleVertexShader>(device, context, GetFullPathTo_Wide(L"SkyBoxVertexShader.cso").c_str());
 	skyBoxPixelShader = std::make_shared<SimplePixelShader>(device, context, GetFullPathTo_Wide(L"SkyBoxPixelShader.cso").c_str());
-	funkyPixelShader = std::make_shared<SimplePixelShader>(device, context, GetFullPathTo_Wide(L"FunkyPixelShader.cso").c_str());
-	basicLightingShader = std::make_shared<SimplePixelShader>(device, context, GetFullPathTo_Wide(L"BasicLightingPixelSHader.cso").c_str());
+	basicLightingShader = std::make_shared<SimplePixelShader>(device, context, GetFullPathTo_Wide(L"BasicLightingPixelShader.cso").c_str());
+	transparencyShader = std::make_shared<SimplePixelShader>(device, context, GetFullPathTo_Wide(L"TransparencyPixelShader.cso").c_str());
 }
 
 void Game::SetLights() {
@@ -167,13 +164,11 @@ void Game::CreateBasicGeometry()
 	desc.MaxLOD = D3D11_FLOAT32_MAX;
 	device->CreateSamplerState(&desc, samplerState.GetAddressOf());
 
-	basicCyanMaterial = new Material(XMFLOAT4(0, 0.8f, 0.8f, 1), vertexShader, pixelShader);
-	basicLightedMaterial = new Material(XMFLOAT4(0.9f, 0.9f, 0.9f, 1), vertexShader, basicLightingShader);
-	funkyMaterial = new Material(XMFLOAT4(1, 1, 1, 1), vertexShader, funkyPixelShader);
 	metalHatchMaterial = new Material(XMFLOAT4(1, 1, 1, 1), vertexShader, basicLightingShader);
 	asteroidMaterial = new Material(XMFLOAT4(1, 1, 1, 1), vertexShader, basicLightingShader);
 	scratchedMaterial = new Material(XMFLOAT4(1, 1, 1, 1), vertexShader, basicLightingShader);
 	copperMaterial = new Material(XMFLOAT4(1, 1, 1, 1), vertexShader, basicLightingShader);
+	transparentMaterial = new Material(XMFLOAT4(0, 0.5, 1, 0.5), vertexShader, transparencyShader, 0.2f);
 
 	metalHatchMaterial->AddTextureSRV("Albedo", metalHatchTex);
 	metalHatchMaterial->AddTextureSRV("RoughnessMap", metalHatchRoughness);
@@ -200,7 +195,7 @@ void Game::CreateBasicGeometry()
 	cubeMesh = new Mesh(GetFullPathTo("../../Assets/Models/cube.obj").c_str(), device, context);
 	helixMesh = new Mesh(GetFullPathTo("../../Assets/Models/helix.obj").c_str(), device, context);
 
-	sphere1 = std::make_shared<MeshEntity>(sphereMesh, scratchedMaterial);
+	sphere1 = std::make_shared<MeshEntity>(sphereMesh, transparentMaterial);
 	sphere1->GetTransform()->SetPosition(-6, 0, 0);
 	cube = std::make_shared<MeshEntity>(cubeMesh, metalHatchMaterial);
 	cube->GetTransform()->SetPosition(-2, 0, 0);
@@ -266,15 +261,15 @@ void Game::Draw(float deltaTime, float totalTime)
 	// We can't do this in Material or MeshEntity because it can't be done to just any shader, just this one in particular
 	basicLightingShader->SetFloat3("cameraPosition", camera->GetTransform().GetPosition());
 	basicLightingShader->SetData("lights", &lights[0], sizeof(Light) * (int)lights.size());
+	transparencyShader->SetFloat3("cameraPosition", camera->GetTransform().GetPosition());
+	transparencyShader->SetData("lights", &lights[0], sizeof(Light) * (int)lights.size());
 
 	for (int i = 0; i < meshEntities.size(); ++i) {
 		std::shared_ptr<MeshEntity> currentEntity = meshEntities.at(i);
 		//should work fine without checking (just potentially unneccessary setting), does this help or hurt performance?
-		if (currentEntity->GetMaterial()->GetPixelShader() == basicLightingShader) {
-			currentEntity->GetMaterial()->BindResources();
-			currentEntity->GetMaterial()->GetPixelShader()->SetFloat("roughness", currentEntity->GetMaterial()->GetRoughness());
-			currentEntity->GetMaterial()->GetPixelShader()->SetFloat3("ambientColor", ambientColor);
-			
+		currentEntity->GetMaterial()->BindResources();			
+		if (currentEntity->GetMaterial()->GetPixelShader() == transparencyShader) {
+			transparencyShader->SetFloat3("position", meshEntities[i]->GetTransform()->GetPosition());
 		}
 		currentEntity -> Draw(camera, context);
 	}

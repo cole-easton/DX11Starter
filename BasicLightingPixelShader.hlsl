@@ -2,7 +2,7 @@
 #include "LightingIncludes.hlsli"
 
 cbuffer externalData : register(b0) {
-	float4 colorTint;
+	float4 color;
 	float3 cameraPosition;
 	Light lights[5];
 }
@@ -42,7 +42,7 @@ float4 main(VertexToPixel input) : SV_TARGET
 	info.metalness = MetalnessMap.Sample(Sampler, input.uv / texScale).r;
 	info.worldPosition = input.worldPosition;
 	info.cameraPosition = cameraPosition;
-	info.surfaceColor = colorTint * pow(Albedo.Sample(Sampler, input.uv/texScale).rgb, 2.2);
+	info.surfaceColor = color * pow(Albedo.Sample(Sampler, input.uv/texScale).rgb, 2.2);
 
 	float3 pixelColor = 0;
 	for (int i = 0; i < 5; i++) {

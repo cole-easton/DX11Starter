@@ -34,9 +34,8 @@ private:
 	bool vsync;
 
 	// Shaders and shader-related constructs
-	std::shared_ptr<SimplePixelShader> pixelShader;
-	std::shared_ptr<SimplePixelShader> funkyPixelShader;
 	std::shared_ptr<SimplePixelShader> basicLightingShader;
+	std::shared_ptr<SimplePixelShader> transparencyShader;
 	std::shared_ptr<SimplePixelShader> skyBoxPixelShader;
 	std::shared_ptr<SimpleVertexShader> vertexShader;
 	std::shared_ptr<SimpleVertexShader> skyBoxVertexShader;
@@ -75,14 +74,11 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> skyBoxTex;
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> samplerState;
 
-	Material* basicCyanMaterial;
-	Material* funkyMaterial;
-	Material* basicLightedMaterial;
-	Material* experimentalLightingMaterial;
 	Material* metalHatchMaterial;
 	Material* asteroidMaterial;
 	Material* scratchedMaterial;
 	Material* copperMaterial;
+	Material* transparentMaterial;
 
 	std::vector<Light> lights;
 
