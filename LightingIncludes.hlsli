@@ -138,7 +138,7 @@ float attenuate(Light light, float3 worldPos)
 	return att * att;
 }
 
-float3 calculateTotalLighting(Light light, LightingInfo info) {
+float4 calculateTotalLighting(Light light, LightingInfo info) {
 	float3 toLight = float3(0, 0, 0);
 	if (light.type == LIGHT_TYPE_DIRECTIONAL) {
 		toLight = normalize(-light.direction);
@@ -151,9 +151,9 @@ float3 calculateTotalLighting(Light light, LightingInfo info) {
 	float diffuse = DiffusePBR(info.normal, toLight);
 	float3 spec = MicrofacetBRDF(info.normal, toLight, normalize(info.cameraPosition - info.worldPosition), info.roughness, specularColor);
 	float3 balancedDiffuse = DiffuseEnergyConserve(diffuse, spec, info.metalness);
-	float3 result = (balancedDiffuse * info.surfaceColor + spec) * light.intensity * light.color;
+	float4 result = (float4(balancedDiffuse * info.surfaceColor, info.alpha) + spec.rgbr) * float4(light.intensity * light.color, 1);
 	if (light.type == LIGHT_TYPE_POINT) {
-		result *= attenuate(light, info.worldPosition).rrr;
+		result *= attenuate(light, info.worldPosition).rrrr;
 	}
 	return result;
 }

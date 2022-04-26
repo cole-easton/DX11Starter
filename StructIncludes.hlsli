@@ -66,7 +66,7 @@ struct LightingInfo {
 	float3 worldPosition	: POSITION;
 	float metalness			: PADDING;
 	float3 cameraPosition	: POSITION;
-	float padding1			: PADDING;
+	float alpha				: ALPHA;
 	float3 surfaceColor		: COLOR;
 	float padding2			: PADDING;
 };

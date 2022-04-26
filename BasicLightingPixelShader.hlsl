@@ -43,6 +43,7 @@ float4 main(VertexToPixel input) : SV_TARGET
 	info.worldPosition = input.worldPosition;
 	info.cameraPosition = cameraPosition;
 	info.surfaceColor = color * pow(Albedo.Sample(Sampler, input.uv/texScale).rgb, 2.2);
+	info.alpha = 1;
 
 	float3 pixelColor = 0;
 	for (int i = 0; i < 5; i++) {

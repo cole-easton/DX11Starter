@@ -80,6 +80,8 @@ private:
 	Material* copperMaterial;
 	Material* transparentMaterial;
 
+	ID3D11BlendState* transparencyBlendState;
+
 	std::vector<Light> lights;
 
 	DirectX::XMFLOAT3 ambientColor;

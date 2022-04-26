@@ -73,6 +73,20 @@ void Game::Init()
 	// geometric primitives (points, lines or triangles) we want to draw.  
 	// Essentially: "What kind of shape should the GPU draw with our data?"
 	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	D3D11_BLEND_DESC bd = {};
+	bd.AlphaToCoverageEnable = false;
+	bd.IndependentBlendEnable = false;
+	bd.RenderTarget[0].BlendEnable = true;
+	bd.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+	bd.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+	bd.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+	bd.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+	bd.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+	bd.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+	bd.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+	device->CreateBlendState(&bd, &transparencyBlendState);
+	context->OMSetBlendState(transparencyBlendState, NULL, 0xffffffff);
 }
 
 // --------------------------------------------------------
@@ -168,7 +182,7 @@ void Game::CreateBasicGeometry()
 	asteroidMaterial = new Material(XMFLOAT4(1, 1, 1, 1), vertexShader, basicLightingShader);
 	scratchedMaterial = new Material(XMFLOAT4(1, 1, 1, 1), vertexShader, basicLightingShader);
 	copperMaterial = new Material(XMFLOAT4(1, 1, 1, 1), vertexShader, basicLightingShader);
-	transparentMaterial = new Material(XMFLOAT4(0, 0.5, 1, 0.5), vertexShader, transparencyShader, 0.2f);
+	transparentMaterial = new Material(XMFLOAT4(1, 0, 0, 0.1f), vertexShader, transparencyShader, 0.1f);
 
 	metalHatchMaterial->AddTextureSRV("Albedo", metalHatchTex);
 	metalHatchMaterial->AddTextureSRV("RoughnessMap", metalHatchRoughness);
@@ -263,7 +277,7 @@ void Game::Draw(float deltaTime, float totalTime)
 	basicLightingShader->SetData("lights", &lights[0], sizeof(Light) * (int)lights.size());
 	transparencyShader->SetFloat3("cameraPosition", camera->GetTransform().GetPosition());
 	transparencyShader->SetData("lights", &lights[0], sizeof(Light) * (int)lights.size());
-
+	skyBox->Draw(camera, context); //after drawing objects
 	for (int i = 0; i < meshEntities.size(); ++i) {
 		std::shared_ptr<MeshEntity> currentEntity = meshEntities.at(i);
 		//should work fine without checking (just potentially unneccessary setting), does this help or hurt performance?
@@ -273,7 +287,6 @@ void Game::Draw(float deltaTime, float totalTime)
 		}
 		currentEntity -> Draw(camera, context);
 	}
-	skyBox->Draw(camera, context); //after drawing objects
 
 	// Present the back buffer to the user
 	//  - Puts the final frame we're drawing into the window so the user can see it

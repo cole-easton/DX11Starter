@@ -21,14 +21,9 @@ cbuffer externalData : register(b0) {
 float4 main(VertexToPixel input) : SV_TARGET
 {
 	float3 camToPoint = input.worldPosition - cameraPosition;
-	float3 pointToCenter = position - input.worldPosition;
 	float3 camToCenter = position - cameraPosition;
-	float radius = 2 * length(pointToCenter);
-	camToPoint = normalize(camToPoint);
-	pointToCenter = normalize(pointToCenter);
-	float d = dot(camToPoint, pointToCenter);
-	//float thickness = sqrt(1 - d*d) * d * radius;
 	float thickness = 2 * (dot(camToPoint, camToCenter)/length(camToPoint) - length(camToPoint));
+	float alpha = 1 - pow(1 - color.a, thickness);
 	LightingInfo info;
 	info.normal = normalize(input.normal);
 	info.roughness = roughness;
@@ -36,12 +31,13 @@ float4 main(VertexToPixel input) : SV_TARGET
 	info.worldPosition = input.worldPosition;
 	info.cameraPosition = cameraPosition;
 	info.surfaceColor = color.rgb;
+	info.alpha = alpha;
 
-	float3 pixelColor = 0;
+	float4 pixelColor = 0;
 	for (int i = 0; i < 5; i++) {
 		pixelColor += calculateTotalLighting(lights[i], info);
 
 	}
-	return float4(pow(thickness/40, 1.0f / 2.2f).rrr, 1);
+	return float4(pow(pixelColor.rgb, 1/2.2f), pixelColor.a);
 
 }
