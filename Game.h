@@ -34,6 +34,7 @@ private:
 	bool vsync;
 
 	// Shaders and shader-related constructs
+	std::shared_ptr<SimplePixelShader> perturbationShader;
 	std::shared_ptr<SimplePixelShader> basicLightingShader;
 	std::shared_ptr<SimplePixelShader> transparencyShader;
 	std::shared_ptr<SimplePixelShader> skyBoxPixelShader;
@@ -81,7 +82,8 @@ private:
 	void LoadShaders(); 
 	void CreateBasicGeometry();
 	void SetLights();
-	void ResizeOnePostProcessResource(Microsoft::WRL::ComPtr<ID3D11RenderTargetView>& rtv, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>& srv)
+	void ResizeOnePostProcessResource(Microsoft::WRL::ComPtr<ID3D11RenderTargetView>& rtv, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>& srv);
+	void CreatePerturbations();
 
 	// Note the usage of ComPtr below
 	//  - This is a smart pointer for objects that abide by the

@@ -89,6 +89,9 @@
     <ClInclude Include="SkyBox.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Sphere.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="PixelShader.hlsl">
@@ -110,6 +113,9 @@
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="TransparencyPixelShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="PerturbationShader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
   </ItemGroup>

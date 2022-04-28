@@ -4,6 +4,7 @@
 #include "Vertex.h"
 #include "Input.h"
 #include "Lights.h"
+#include "Sphere.h"
 #include "WICTextureLoader.h"
 
 // Needed for a helper function to read compiled shader files from the hard drive
@@ -101,6 +102,7 @@ void Game::LoadShaders()
 	skyBoxPixelShader = std::make_shared<SimplePixelShader>(device, context, GetFullPathTo_Wide(L"SkyBoxPixelShader.cso").c_str());
 	basicLightingShader = std::make_shared<SimplePixelShader>(device, context, GetFullPathTo_Wide(L"BasicLightingPixelShader.cso").c_str());
 	transparencyShader = std::make_shared<SimplePixelShader>(device, context, GetFullPathTo_Wide(L"TransparencyPixelShader.cso").c_str());
+	transparencyShader = std::make_shared<SimplePixelShader>(device, context, GetFullPathTo_Wide(L"PerturbationShader.cso").c_str());
 }
 
 void Game::SetLights() {
@@ -204,6 +206,7 @@ void Game::OnResize()
 	if(camera) camera->UpdateProjectionMatrix((float)this->width / this->height);
 
 	ResizeOnePostProcessResource(refractionRTV, refractionSRV);
+	ResizeOnePostProcessResource(gammaCorrectionRTV, gammaCorrectionSRV);
 }
 
 // Adapted from code by Chris Casciolli 
@@ -216,10 +219,10 @@ void Game::ResizeOnePostProcessResource(
 	srv.Reset();
 
 	D3D11_TEXTURE2D_DESC textureDesc = {};
-	textureDesc.Width = width / 2;
-	textureDesc.Height = height / 2;
+	textureDesc.Width = width;
+	textureDesc.Height = height;
 	textureDesc.ArraySize = 1;
-	textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE; ]
+	textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE; 
 	textureDesc.CPUAccessFlags = 0;
 	textureDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
 	textureDesc.MipLevels = 1;
@@ -238,7 +241,7 @@ void Game::ResizeOnePostProcessResource(
 
 	device->CreateRenderTargetView(ppTexture.Get(), &rtvDesc, rtv.ReleaseAndGetAddressOf());
 
-	//nulll description gives srv access to the whole resource
+	//null description gives srv access to the whole resource
 	device->CreateShaderResourceView(ppTexture.Get(), 0, srv.ReleaseAndGetAddressOf());
 }
 
@@ -293,6 +296,7 @@ void Game::Draw(float deltaTime, float totalTime)
 	skyBox->Draw(camera, context); //after drawing objects
 	//ADD DRAW FOR FLOOR HERE
 	context->OMSetBlendState(transparencyBlendState, NULL, 0xffffffff); //all items in meshEntities are transparent
+
 	for (int i = 0; i < meshEntities.size(); ++i) {
 		std::shared_ptr<MeshEntity> currentEntity = meshEntities.at(i);
 		//should work fine without checking (just potentially unneccessary setting), does this help or hurt performance?
@@ -312,3 +316,40 @@ void Game::Draw(float deltaTime, float totalTime)
 	// the render target must be re-bound after every call to Present()
 	context->OMSetRenderTargets(1, backBufferRTV.GetAddressOf(), depthStencilView.Get());
 }
+
+//void Game::CreatePerturbations() {
+//	D3D11_VIEWPORT vp = {};
+//	vp.Width = width;
+//	vp.Height = height;
+//	vp.MaxDepth = 1.0f;
+//	context->RSSetViewports(1, &vp);
+//
+//	context->OMSetRenderTargets(1, refractionRTV.GetAddressOf(), 0);
+//
+//
+//	perturbationShader->SetShader();
+//	perturbationShader->SetShaderResourceView("Pixels", refractionSRV.Get());
+//
+//	std::vector<Sphere> spheres;
+//	XMMATRIX proj = XMLoadFloat4x4(&(camera->GetProjectionMatrix()));
+//	XMMATRIX view = XMLoadFloat4x4(&(camera->GetViewMatrix()));
+//	for (int i = 0; i < meshEntities.size(); i++) {
+//		XMMATRIX world = XMLoadFloat4x4(&(meshEntities[i]->GetTransform()->GetWorldMatrix()));
+//		XMMATRIX wvp = XMMatrixMultiply(proj, XMMatrixMultiply(view, world));
+//		Sphere sphere = {};
+//		//XMStoreFloat2(&(sphere.Position), XMVector4Transform(XMLoadFloat4(&(meshEntities[i]->GetTransform()->GetPosition())), wvp));
+//		XMVECTOR pos;
+//		XMVECTOR rot;
+//		XMVECTOR scale;
+//		XMMatrixDecompose(&scale, &rot, &pos, wvp);
+//		XMStoreFloat2(&(sphere.Position), pos);
+//		XMStoreFloat(&(sphere.Radius), scale);
+//		sphere.Roughness = meshEntities[i]->GetMaterial()->GetRoughness();
+//		spheres.push_back(sphere);
+//	}
+//	perturbationShader->SetData("spheres", &spheres[0], sizeof(Sphere) * (int)spheres.size());
+//	perturbationShader->CopyAllBufferData();
+//
+//	// Draw exactly 3 vertices for our "full screen triangle"
+//	context->Draw(3, 0);
+//}

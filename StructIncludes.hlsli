@@ -60,6 +60,12 @@ struct Light {
 	float3 padding			: PADDING;
 };
 
+struct Sphere {
+	float2 position;
+	float radius;
+	float roughness;
+};
+
 struct LightingInfo {
 	float3 normal			: NORMAL;
 	float roughness			: ROUGHNESS;
