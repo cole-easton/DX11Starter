@@ -1,4 +1,5 @@
 #include <DDSTextureLoader.h>
+#include <algorithm> //for std::sort
 #include "Game.h"
 #include "Vertex.h"
 #include "Input.h"
@@ -43,10 +44,7 @@ Game::Game(HINSTANCE hInstance)
 // --------------------------------------------------------
 Game::~Game()
 {
-	delete asteroidMaterial;
 	delete metalHatchMaterial;
-	delete scratchedMaterial;
-	delete copperMaterial;
 	delete transparentMaterial;
 	delete sphereMesh;
 	delete cubeMesh;
@@ -86,7 +84,6 @@ void Game::Init()
 	bd.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
 	bd.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 	device->CreateBlendState(&bd, &transparencyBlendState);
-	context->OMSetBlendState(transparencyBlendState, NULL, 0xffffffff);
 }
 
 // --------------------------------------------------------
@@ -155,18 +152,6 @@ void Game::CreateBasicGeometry()
 	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/metalhatch_roughness.tif").c_str(), 0, metalHatchRoughness.GetAddressOf());
 	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/metalhatch_normal.tif").c_str(), 0, metalHatchNormal.GetAddressOf());
 	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/metalhatch_metalness.tif").c_str(), 0, metalHatchMetalness.GetAddressOf());
-	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/asteroid_albedo.tif").c_str(), 0, asteroidTex.GetAddressOf());
-	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/asteroid_roughness.tif").c_str(), 0, asteroidRoughness.GetAddressOf());
-	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/asteroid_normal.tif").c_str(), 0, asteroidNormal.GetAddressOf());
-	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/asteroid_metalness.png").c_str(), 0, asteroidMetalness.GetAddressOf());
-	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/scratched_albedo.png").c_str(), 0, scratchedTex.GetAddressOf());
-	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/scratched_roughness.png").c_str(), 0, scratchedRoughness.GetAddressOf());
-	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/scratched_normal.png").c_str(), 0, scratchedNormal.GetAddressOf());
-	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/scratched_metalness.png").c_str(), 0, scratchedMetalness.GetAddressOf());
-	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/copper_albedo.tif").c_str(), 0, copperTex.GetAddressOf());
-	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/copper_roughness.tif").c_str(), 0, copperRoughness.GetAddressOf());
-	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/copper_normal.tif").c_str(), 0, copperNormal.GetAddressOf());
-	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/copper_metalness.png").c_str(), 0, copperMetalness.GetAddressOf());
 	CreateDDSTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/SunnyCubeMap.dds").c_str(), 0, skyBoxTex.GetAddressOf());
 
 	D3D11_SAMPLER_DESC desc = {};
@@ -179,9 +164,6 @@ void Game::CreateBasicGeometry()
 	device->CreateSamplerState(&desc, samplerState.GetAddressOf());
 
 	metalHatchMaterial = new Material(XMFLOAT4(1, 1, 1, 1), vertexShader, basicLightingShader);
-	asteroidMaterial = new Material(XMFLOAT4(1, 1, 1, 1), vertexShader, basicLightingShader);
-	scratchedMaterial = new Material(XMFLOAT4(1, 1, 1, 1), vertexShader, basicLightingShader);
-	copperMaterial = new Material(XMFLOAT4(1, 1, 1, 1), vertexShader, basicLightingShader);
 	transparentMaterial = new Material(XMFLOAT4(1, 0, 0, 0.1f), vertexShader, transparencyShader, 0.1f);
 
 	metalHatchMaterial->AddTextureSRV("Albedo", metalHatchTex);
@@ -189,21 +171,6 @@ void Game::CreateBasicGeometry()
 	metalHatchMaterial->AddTextureSRV("NormalMap", metalHatchNormal);
 	metalHatchMaterial->AddTextureSRV("MetalnessMap", metalHatchMetalness);
 	metalHatchMaterial->AddSampler("Sampler", samplerState); //can't call ut SamplerState because thats an HLSL keyword
-	asteroidMaterial->AddTextureSRV("Albedo", asteroidTex);
-	asteroidMaterial->AddTextureSRV("RoughnessMap", asteroidRoughness);
-	asteroidMaterial->AddTextureSRV("NormalMap", asteroidNormal);
-	asteroidMaterial->AddTextureSRV("MetalnessMap", asteroidMetalness);
-	asteroidMaterial->AddSampler("Sampler", samplerState);
-	scratchedMaterial->AddTextureSRV("Albedo", scratchedTex);
-	scratchedMaterial->AddTextureSRV("RoughnessMap", scratchedRoughness);
-	scratchedMaterial->AddTextureSRV("NormalMap", scratchedNormal);
-	scratchedMaterial->AddTextureSRV("MetalnessMap", scratchedMetalness);
-	scratchedMaterial->AddSampler("Sampler", samplerState);
-	copperMaterial->AddTextureSRV("Albedo", copperTex);
-	copperMaterial->AddTextureSRV("RoughnessMap", copperRoughness);
-	copperMaterial->AddTextureSRV("NormalMap", copperNormal);
-	copperMaterial->AddTextureSRV("MetalnessMap", copperMetalness);
-	copperMaterial->AddSampler("Sampler", samplerState);
 	
 	sphereMesh = new Mesh(GetFullPathTo("../../Assets/Models/sphere.obj").c_str(), device, context);
 	cubeMesh = new Mesh(GetFullPathTo("../../Assets/Models/cube.obj").c_str(), device, context);
@@ -213,9 +180,9 @@ void Game::CreateBasicGeometry()
 	sphere1->GetTransform()->SetPosition(-6, 0, 0);
 	cube = std::make_shared<MeshEntity>(cubeMesh, metalHatchMaterial);
 	cube->GetTransform()->SetPosition(-2, 0, 0);
-	helix = std::make_shared<MeshEntity>(helixMesh, copperMaterial);
+	helix = std::make_shared<MeshEntity>(helixMesh, transparentMaterial);
 	helix->GetTransform()->SetPosition(2, 0, 0);
-	sphere2 = std::make_shared<MeshEntity>(sphereMesh, asteroidMaterial);
+	sphere2 = std::make_shared<MeshEntity>(sphereMesh, transparentMaterial);
 	sphere2->GetTransform()->SetPosition(6, 0, 0);
 	meshEntities.push_back(sphere1);
 	meshEntities.push_back(cube);
@@ -235,6 +202,44 @@ void Game::OnResize()
 	// Handle base-level DX resize stuff
 	DXCore::OnResize();
 	if(camera) camera->UpdateProjectionMatrix((float)this->width / this->height);
+
+	ResizeOnePostProcessResource(refractionRTV, refractionSRV);
+}
+
+// Adapted from code by Chris Casciolli 
+// https ://github.com/vixorien/ggp-demos/blob/main/16%20-%20Bloom%20Post%20Process/Game.cpp
+void Game::ResizeOnePostProcessResource(
+	Microsoft::WRL::ComPtr<ID3D11RenderTargetView>& rtv,
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>& srv)
+{
+	rtv.Reset();
+	srv.Reset();
+
+	D3D11_TEXTURE2D_DESC textureDesc = {};
+	textureDesc.Width = width / 2;
+	textureDesc.Height = height / 2;
+	textureDesc.ArraySize = 1;
+	textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE; ]
+	textureDesc.CPUAccessFlags = 0;
+	textureDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+	textureDesc.MipLevels = 1;
+	textureDesc.MiscFlags = 0;
+	textureDesc.SampleDesc.Count = 1;
+	textureDesc.SampleDesc.Quality = 0;
+	textureDesc.Usage = D3D11_USAGE_DEFAULT;
+
+	Microsoft::WRL::ComPtr<ID3D11Texture2D> ppTexture;
+	device->CreateTexture2D(&textureDesc, 0, ppTexture.GetAddressOf());
+
+	D3D11_RENDER_TARGET_VIEW_DESC rtvDesc = {};
+	rtvDesc.Format = textureDesc.Format;
+	rtvDesc.Texture2D.MipSlice = 0;
+	rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+
+	device->CreateRenderTargetView(ppTexture.Get(), &rtvDesc, rtv.ReleaseAndGetAddressOf());
+
+	//nulll description gives srv access to the whole resource
+	device->CreateShaderResourceView(ppTexture.Get(), 0, srv.ReleaseAndGetAddressOf());
 }
 
 // --------------------------------------------------------
@@ -247,7 +252,14 @@ void Game::Update(float deltaTime, float totalTime)
 	}
 	camera->Update(deltaTime);
 
-
+	XMFLOAT3 camPos = camera->GetTransform().GetPosition();
+	std::sort(meshEntities.begin(), meshEntities.end(), [&](std::shared_ptr<MeshEntity> a, std::shared_ptr<MeshEntity> b) -> bool {
+		XMFLOAT3 aPos = a->GetTransform()->GetPosition();
+		XMFLOAT3 bPos = b->GetTransform()->GetPosition();
+		float aDist = XMVectorGetX(XMVector3Length(XMLoadFloat3(&aPos) - XMLoadFloat3(&camPos)));
+		float bDist = XMVectorGetX(XMVector3Length(XMLoadFloat3(&bPos) - XMLoadFloat3(&camPos)));
+		return aDist > bDist;
+	});
 
 	// Example input checking: Quit if the escape key is pressed
 	if (Input::GetInstance().KeyDown(VK_ESCAPE))
@@ -277,7 +289,10 @@ void Game::Draw(float deltaTime, float totalTime)
 	basicLightingShader->SetData("lights", &lights[0], sizeof(Light) * (int)lights.size());
 	transparencyShader->SetFloat3("cameraPosition", camera->GetTransform().GetPosition());
 	transparencyShader->SetData("lights", &lights[0], sizeof(Light) * (int)lights.size());
+	context->OMSetBlendState(NULL, NULL, 0xffffffff);
 	skyBox->Draw(camera, context); //after drawing objects
+	//ADD DRAW FOR FLOOR HERE
+	context->OMSetBlendState(transparencyBlendState, NULL, 0xffffffff); //all items in meshEntities are transparent
 	for (int i = 0; i < meshEntities.size(); ++i) {
 		std::shared_ptr<MeshEntity> currentEntity = meshEntities.at(i);
 		//should work fine without checking (just potentially unneccessary setting), does this help or hurt performance?

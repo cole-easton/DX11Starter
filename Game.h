@@ -59,25 +59,16 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> metalHatchRoughness;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> metalHatchNormal;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> metalHatchMetalness;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> asteroidTex;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> asteroidRoughness;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> asteroidNormal;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> asteroidMetalness;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> scratchedTex;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> scratchedRoughness;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> scratchedNormal;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> scratchedMetalness;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> copperTex;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> copperRoughness;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> copperNormal;
-	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> copperMetalness;
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> skyBoxTex;
+
+	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> refractionRTV;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> refractionSRV;
+	Microsoft::WRL::ComPtr<ID3D11RenderTargetView> gammaCorrectionRTV;
+	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> gammaCorrectionSRV;
+
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> samplerState;
 
 	Material* metalHatchMaterial;
-	Material* asteroidMaterial;
-	Material* scratchedMaterial;
-	Material* copperMaterial;
 	Material* transparentMaterial;
 
 	ID3D11BlendState* transparencyBlendState;
@@ -90,6 +81,7 @@ private:
 	void LoadShaders(); 
 	void CreateBasicGeometry();
 	void SetLights();
+	void ResizeOnePostProcessResource(Microsoft::WRL::ComPtr<ID3D11RenderTargetView>& rtv, Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>& srv)
 
 	// Note the usage of ComPtr below
 	//  - This is a smart pointer for objects that abide by the
