@@ -24,7 +24,7 @@ SamplerState Sampler : register(s0);
 // --------------------------------------------------------
 float4 main(VertexToPixel input) : SV_TARGET
 {
-	int texScale = 2;
+	float texScale = 0.6;
 	float3 unpackedNormal = NormalMap.Sample(Sampler, input.uv/texScale).rgb * 2 - 1;
 
 	input.normal = normalize(input.normal);

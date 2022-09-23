@@ -118,6 +118,9 @@
     <FxCompile Include="PerturbationShader.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="FullScreenVertexShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="LightingIncludes.hlsli">

@@ -39,21 +39,18 @@ private:
 	std::shared_ptr<SimplePixelShader> transparencyShader;
 	std::shared_ptr<SimplePixelShader> skyBoxPixelShader;
 	std::shared_ptr<SimpleVertexShader> vertexShader;
+	std::shared_ptr<SimpleVertexShader> fullScreenVertexShader;
 	std::shared_ptr<SimpleVertexShader> skyBoxVertexShader;
 
 	std::shared_ptr<Camera> camera;
 
 	Mesh* sphereMesh;
+	Mesh* quadMesh;
 	Mesh* cubeMesh;
-	Mesh* helixMesh;
 
 	SkyBox* skyBox;
 
-	std::shared_ptr<MeshEntity> sphere1;
-	std::shared_ptr<MeshEntity> sphere2;
-	std::shared_ptr<MeshEntity> cube;
-	std::shared_ptr<MeshEntity> helix;
-
+	std::shared_ptr<MeshEntity> ground;
 	std::vector<std::shared_ptr<MeshEntity>> meshEntities;
 
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> metalHatchTex;
@@ -68,9 +65,13 @@ private:
 	Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> gammaCorrectionSRV;
 
 	Microsoft::WRL::ComPtr<ID3D11SamplerState> samplerState;
+	Microsoft::WRL::ComPtr<ID3D11SamplerState> ppSampler;
 
 	Material* metalHatchMaterial;
-	Material* transparentMaterial;
+	Material* transparentMaterialR;
+	Material* transparentMaterialG;
+	Material* transparentMaterialB;
+	Material* transparentMaterialY;
 
 	ID3D11BlendState* transparencyBlendState;
 

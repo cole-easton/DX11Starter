@@ -46,11 +46,14 @@ Game::Game(HINSTANCE hInstance)
 Game::~Game()
 {
 	delete metalHatchMaterial;
-	delete transparentMaterial;
+	delete transparentMaterialR;
+	delete transparentMaterialG;
+	delete transparentMaterialB;
+	delete transparentMaterialY;
 	delete sphereMesh;
-	delete cubeMesh;
-	delete helixMesh;
+	delete quadMesh;
 	delete skyBox;
+	delete cubeMesh;
 }
 
 // --------------------------------------------------------
@@ -65,7 +68,7 @@ void Game::Init()
 	LoadShaders();
 	CreateBasicGeometry();
 	SetLights();
-	camera = std::make_shared<Camera>(Transform(0, 0, -10, 0, 0, 0, 1, 1, 1), (float)this->width / this->height);
+	camera = std::make_shared<Camera>(Transform(0, 1, -8, 0.2f, 0, 0, 1, 1, 1), (float)this->width / this->height);
 	ambientColor = XMFLOAT3(0.15f, 0.15f, 0.25f);
 	
 	// Tell the input assembler stage of the pipeline what kind of
@@ -97,52 +100,56 @@ void Game::Init()
 // --------------------------------------------------------
 void Game::LoadShaders()
 {
-	vertexShader = std::make_shared<SimpleVertexShader>(device, context, GetFullPathTo_Wide(L"VertexShader.cso").c_str());    
+	vertexShader = std::make_shared<SimpleVertexShader>(device, context, GetFullPathTo_Wide(L"VertexShader.cso").c_str()); 
+	fullScreenVertexShader = std::make_shared<SimpleVertexShader>(device, context, GetFullPathTo_Wide(L"fullScreenVertexShader.cso").c_str());
 	skyBoxVertexShader = std::make_shared<SimpleVertexShader>(device, context, GetFullPathTo_Wide(L"SkyBoxVertexShader.cso").c_str());
 	skyBoxPixelShader = std::make_shared<SimplePixelShader>(device, context, GetFullPathTo_Wide(L"SkyBoxPixelShader.cso").c_str());
 	basicLightingShader = std::make_shared<SimplePixelShader>(device, context, GetFullPathTo_Wide(L"BasicLightingPixelShader.cso").c_str());
 	transparencyShader = std::make_shared<SimplePixelShader>(device, context, GetFullPathTo_Wide(L"TransparencyPixelShader.cso").c_str());
-	transparencyShader = std::make_shared<SimplePixelShader>(device, context, GetFullPathTo_Wide(L"PerturbationShader.cso").c_str());
+	perturbationShader = std::make_shared<SimplePixelShader>(device, context, GetFullPathTo_Wide(L"PerturbationShader.cso").c_str());
 }
 
 void Game::SetLights() {
-	Light directionalLight1 = {};
-	directionalLight1.type = LIGHT_TYPE_DIRECTIONAL;
-	directionalLight1.color = XMFLOAT3(1, 1, 1);
-	directionalLight1.direction = XMFLOAT3(1, 0, 0);
-	directionalLight1.intensity = 0.6f;
+	Light directionalLight = {};
+	directionalLight.type = LIGHT_TYPE_DIRECTIONAL;
+	directionalLight.color = XMFLOAT3(1, 1, 1);
+	directionalLight.direction = XMFLOAT3(0.5, -0.5, 1);
+	directionalLight.intensity = 0.8f;
 
-	Light directionalLight2 = {};
-	directionalLight2.type = LIGHT_TYPE_DIRECTIONAL;
-	directionalLight2.color = XMFLOAT3(1, 1, 1);
-	directionalLight2.direction = XMFLOAT3(-1, -1, 0);
-	directionalLight2.intensity = 0.9f;
-
-	Light directionalLight3 = {};
-	directionalLight3.type = LIGHT_TYPE_DIRECTIONAL;
-	directionalLight3.color = XMFLOAT3(1, 1, 1);
-	directionalLight3.direction = XMFLOAT3(0, 0, 1);
-	directionalLight3.intensity = 1.3f;
 
 	Light pointLight1 = {};
 	pointLight1.type = LIGHT_TYPE_POINT;
-	pointLight1.color = XMFLOAT3(1, 1, 1);
-	pointLight1.position = XMFLOAT3(-4, 1.5, 0);
-	pointLight1.intensity = 1;
-	pointLight1.range = 3;
+	pointLight1.color = XMFLOAT3(1, 1, 0);
+	pointLight1.position = XMFLOAT3(-6, 0, 0);
+	pointLight1.intensity = 0.8f;
+	pointLight1.range = 2;
 
 	Light pointLight2 = {};
 	pointLight2.type = LIGHT_TYPE_POINT;
-	pointLight2.color = XMFLOAT3(1, 1, 1);
-	pointLight2.position = XMFLOAT3(6, -2, -2);
+	pointLight2.color = XMFLOAT3(0, 0.5, 1);
+	pointLight2.position = XMFLOAT3(-2, 0, 0);
 	pointLight2.intensity = 0.8f;
-	pointLight2.range = 3;
+	pointLight2.range = 2;
 
-	lights.push_back(directionalLight1);
-	lights.push_back(directionalLight2);
-	lights.push_back(directionalLight3);
+	Light pointLight3 = {};
+	pointLight3.type = LIGHT_TYPE_POINT;
+	pointLight3.color = XMFLOAT3(0, 1, 0);
+	pointLight3.position = XMFLOAT3(2, 0, 0);
+	pointLight3.intensity = 0.8f;
+	pointLight3.range = 2;
+
+	Light pointLight4 = {};
+	pointLight4.type = LIGHT_TYPE_POINT;
+	pointLight4.color = XMFLOAT3(1, 0, 0);
+	pointLight4.position = XMFLOAT3(6, 0, 0);
+	pointLight4.intensity = 0.8f;
+	pointLight4.range = 2;
+
+	lights.push_back(directionalLight);
 	lights.push_back(pointLight1);
 	lights.push_back(pointLight2);
+	lights.push_back(pointLight3);
+	lights.push_back(pointLight4);
 }
 
 // --------------------------------------------------------
@@ -156,6 +163,9 @@ void Game::CreateBasicGeometry()
 	CreateWICTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/metalhatch_metalness.tif").c_str(), 0, metalHatchMetalness.GetAddressOf());
 	CreateDDSTextureFromFile(device.Get(), context.Get(), GetFullPathTo_Wide(L"../../Assets/Textures/SunnyCubeMap.dds").c_str(), 0, skyBoxTex.GetAddressOf());
 
+	ResizeOnePostProcessResource(refractionRTV, refractionSRV);
+	ResizeOnePostProcessResource(gammaCorrectionRTV, gammaCorrectionSRV);
+
 	D3D11_SAMPLER_DESC desc = {};
 	desc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
 	desc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -165,8 +175,19 @@ void Game::CreateBasicGeometry()
 	desc.MaxLOD = D3D11_FLOAT32_MAX;
 	device->CreateSamplerState(&desc, samplerState.GetAddressOf());
 
+	D3D11_SAMPLER_DESC ppSampDesc = {};
+	ppSampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+	ppSampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+	ppSampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+	ppSampDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	ppSampDesc.MaxLOD = D3D11_FLOAT32_MAX;
+	device->CreateSamplerState(&ppSampDesc, ppSampler.GetAddressOf());
+
 	metalHatchMaterial = new Material(XMFLOAT4(1, 1, 1, 1), vertexShader, basicLightingShader);
-	transparentMaterial = new Material(XMFLOAT4(1, 0, 0, 0.1f), vertexShader, transparencyShader, 0.1f);
+	transparentMaterialR = new Material(XMFLOAT4(1, 0, 0, 0.15f), vertexShader, transparencyShader, 0.1f);
+	transparentMaterialG = new Material(XMFLOAT4(0, 1, 0, 0.1f), vertexShader, transparencyShader, 0.1f);
+	transparentMaterialB = new Material(XMFLOAT4(0, 0.5f, 1, 0.15f), vertexShader, transparencyShader, 0.1f);
+	transparentMaterialY = new Material(XMFLOAT4(1, 1, 0, 0.3f), vertexShader, transparencyShader, 0.1f);
 
 	metalHatchMaterial->AddTextureSRV("Albedo", metalHatchTex);
 	metalHatchMaterial->AddTextureSRV("RoughnessMap", metalHatchRoughness);
@@ -176,20 +197,24 @@ void Game::CreateBasicGeometry()
 	
 	sphereMesh = new Mesh(GetFullPathTo("../../Assets/Models/sphere.obj").c_str(), device, context);
 	cubeMesh = new Mesh(GetFullPathTo("../../Assets/Models/cube.obj").c_str(), device, context);
-	helixMesh = new Mesh(GetFullPathTo("../../Assets/Models/helix.obj").c_str(), device, context);
+	quadMesh = new Mesh(GetFullPathTo("../../Assets/Models/quad.obj").c_str(), device, context);
 
-	sphere1 = std::make_shared<MeshEntity>(sphereMesh, transparentMaterial);
+	std::shared_ptr<MeshEntity> sphere1 = std::make_shared<MeshEntity>(sphereMesh, transparentMaterialY);
 	sphere1->GetTransform()->SetPosition(-6, 0, 0);
-	cube = std::make_shared<MeshEntity>(cubeMesh, metalHatchMaterial);
-	cube->GetTransform()->SetPosition(-2, 0, 0);
-	helix = std::make_shared<MeshEntity>(helixMesh, transparentMaterial);
-	helix->GetTransform()->SetPosition(2, 0, 0);
-	sphere2 = std::make_shared<MeshEntity>(sphereMesh, transparentMaterial);
+	std::shared_ptr<MeshEntity> sphere3 = std::make_shared<MeshEntity>(sphereMesh, transparentMaterialB);
+	sphere3->GetTransform()->SetPosition(-2, 0, 0);
+	std::shared_ptr<MeshEntity> sphere4 = std::make_shared<MeshEntity>(sphereMesh, transparentMaterialG);
+	sphere4->GetTransform()->SetPosition(2, 0, 0);
+	std::shared_ptr<MeshEntity> sphere2 = std::make_shared<MeshEntity>(sphereMesh, transparentMaterialR);
 	sphere2->GetTransform()->SetPosition(6, 0, 0);
 	meshEntities.push_back(sphere1);
-	meshEntities.push_back(cube);
-	meshEntities.push_back(helix);
+	meshEntities.push_back(sphere3);
+	meshEntities.push_back(sphere4);
 	meshEntities.push_back(sphere2);
+
+	ground = std::make_shared<MeshEntity>(quadMesh, metalHatchMaterial);
+	ground->GetTransform()->SetPosition(0, -1, 0);
+	ground->GetTransform()->SetScale(10, 10, 10);
 
 	skyBox = new SkyBox(cubeMesh, skyBoxTex, skyBoxVertexShader, skyBoxPixelShader, samplerState, device);
 }
@@ -205,8 +230,8 @@ void Game::OnResize()
 	DXCore::OnResize();
 	if(camera) camera->UpdateProjectionMatrix((float)this->width / this->height);
 
-	ResizeOnePostProcessResource(refractionRTV, refractionSRV);
-	ResizeOnePostProcessResource(gammaCorrectionRTV, gammaCorrectionSRV);
+	//ResizeOnePostProcessResource(refractionRTV, refractionSRV);
+	//ResizeOnePostProcessResource(gammaCorrectionRTV, gammaCorrectionSRV);
 }
 
 // Adapted from code by Chris Casciolli 
@@ -251,7 +276,7 @@ void Game::ResizeOnePostProcessResource(
 void Game::Update(float deltaTime, float totalTime)
 {
 	for (int i = 0; i < meshEntities.size(); ++i) {
-		meshEntities.at(i)->GetTransform()->Turn(-0.5f * deltaTime, 0.5f * deltaTime, 0.5f * deltaTime);
+		//meshEntities.at(i)->GetTransform()->Turn(-0.5f * deltaTime, 0.5f * deltaTime, 0.5f * deltaTime);
 	}
 	camera->Update(deltaTime);
 
@@ -293,10 +318,13 @@ void Game::Draw(float deltaTime, float totalTime)
 	transparencyShader->SetFloat3("cameraPosition", camera->GetTransform().GetPosition());
 	transparencyShader->SetData("lights", &lights[0], sizeof(Light) * (int)lights.size());
 	context->OMSetBlendState(NULL, NULL, 0xffffffff);
-	skyBox->Draw(camera, context); //after drawing objects
-	//ADD DRAW FOR FLOOR HERE
 	context->OMSetBlendState(transparencyBlendState, NULL, 0xffffffff); //all items in meshEntities are transparent
-
+	//context->OMSetRenderTargets(1, refractionRTV.GetAddressOf(), depthStencilView.Get());
+	//context->PSSetSamplers(0, 1, samplerState.GetAddressOf());
+	ground->GetMaterial()->BindResources();
+	ground->Draw(camera, context);
+	skyBox->Draw(camera, context); //after drawing objects
+	//CreatePerturbations();
 	for (int i = 0; i < meshEntities.size(); ++i) {
 		std::shared_ptr<MeshEntity> currentEntity = meshEntities.at(i);
 		//should work fine without checking (just potentially unneccessary setting), does this help or hurt performance?
@@ -306,7 +334,7 @@ void Game::Draw(float deltaTime, float totalTime)
 		}
 		currentEntity -> Draw(camera, context);
 	}
-
+	
 	// Present the back buffer to the user
 	//  - Puts the final frame we're drawing into the window so the user can see it
 	//  - Do this exactly ONCE PER FRAME (always at the very end of the frame)
@@ -317,39 +345,38 @@ void Game::Draw(float deltaTime, float totalTime)
 	context->OMSetRenderTargets(1, backBufferRTV.GetAddressOf(), depthStencilView.Get());
 }
 
-//void Game::CreatePerturbations() {
-//	D3D11_VIEWPORT vp = {};
-//	vp.Width = width;
-//	vp.Height = height;
-//	vp.MaxDepth = 1.0f;
-//	context->RSSetViewports(1, &vp);
-//
-//	context->OMSetRenderTargets(1, refractionRTV.GetAddressOf(), 0);
-//
-//
-//	perturbationShader->SetShader();
-//	perturbationShader->SetShaderResourceView("Pixels", refractionSRV.Get());
-//
-//	std::vector<Sphere> spheres;
-//	XMMATRIX proj = XMLoadFloat4x4(&(camera->GetProjectionMatrix()));
-//	XMMATRIX view = XMLoadFloat4x4(&(camera->GetViewMatrix()));
-//	for (int i = 0; i < meshEntities.size(); i++) {
-//		XMMATRIX world = XMLoadFloat4x4(&(meshEntities[i]->GetTransform()->GetWorldMatrix()));
-//		XMMATRIX wvp = XMMatrixMultiply(proj, XMMatrixMultiply(view, world));
-//		Sphere sphere = {};
-//		//XMStoreFloat2(&(sphere.Position), XMVector4Transform(XMLoadFloat4(&(meshEntities[i]->GetTransform()->GetPosition())), wvp));
-//		XMVECTOR pos;
-//		XMVECTOR rot;
-//		XMVECTOR scale;
-//		XMMatrixDecompose(&scale, &rot, &pos, wvp);
-//		XMStoreFloat2(&(sphere.Position), pos);
-//		XMStoreFloat(&(sphere.Radius), scale);
-//		sphere.Roughness = meshEntities[i]->GetMaterial()->GetRoughness();
-//		spheres.push_back(sphere);
-//	}
-//	perturbationShader->SetData("spheres", &spheres[0], sizeof(Sphere) * (int)spheres.size());
-//	perturbationShader->CopyAllBufferData();
-//
-//	// Draw exactly 3 vertices for our "full screen triangle"
-//	context->Draw(3, 0);
-//}
+void Game::CreatePerturbations() {
+	D3D11_VIEWPORT vp = {};
+	vp.Width = width;
+	vp.Height = height;
+	vp.MaxDepth = 1.0f;
+	context->RSSetViewports(1, &vp);
+
+	context->OMSetRenderTargets(1, backBufferRTV.GetAddressOf(), 0);
+	context->PSSetSamplers(0, 1, ppSampler.GetAddressOf());
+
+	fullScreenVertexShader->SetShader();
+	perturbationShader->SetShader();
+
+	perturbationShader->SetShaderResourceView("Pixels", refractionSRV.Get());
+
+	std::vector<Sphere> spheres;
+	XMMATRIX proj = XMLoadFloat4x4(&(camera->GetProjectionMatrix()));
+	XMMATRIX view = XMLoadFloat4x4(&(camera->GetViewMatrix()));
+	for (int i = 0; i < meshEntities.size(); i++) {
+		XMMATRIX world = XMLoadFloat4x4(&(meshEntities[i]->GetTransform()->GetWorldMatrix()));
+		XMMATRIX wvp = XMMatrixMultiply(XMMatrixMultiply(proj, view), world);
+		Sphere sphere = {};
+		XMVECTOR spherePos = XMVector4Transform(XMLoadFloat3(&(meshEntities[i]->GetTransform()->GetPosition())), wvp);
+		XMStoreFloat2(&(sphere.Position), spherePos/XMVectorGetByIndex(spherePos, 2));
+		float one = 1.0f;
+		XMStoreFloat(&(sphere.Radius), XMLoadFloat(&one) / XMVectorGetByIndex(spherePos, 3));
+		sphere.Roughness = meshEntities[i]->GetMaterial()->GetRoughness();
+		spheres.push_back(sphere);
+	}
+	perturbationShader->SetData("spheres", &spheres[0], sizeof(Sphere) * (int)spheres.size());
+	perturbationShader->CopyAllBufferData();
+
+	// Draw exactly 3 vertices for our "full screen triangle"
+	context->Draw(3, 0);
+}
